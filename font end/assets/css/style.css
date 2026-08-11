@@ -2348,6 +2348,11 @@ font-size: 18px;
 .single_footer{margin-bottom:30px;}
 }
 .single_footer img{margin-bottom:20px;}
+.single_footer .footer-logo{
+	width: 180px;
+	height: auto;
+	max-width: 100%;
+}
 .single_footer h4 {
 	color: #0b104a;
 	margin-top: 0;
