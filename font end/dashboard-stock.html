@@ -857,13 +857,13 @@
             <div class="module-tag"><i class="fa-solid fa-boxes-stacked me-1"></i> Module : Stock</div>
 
             <ul class="sidebar-nav">
-                <li class="active" data-view="overview"><a href="#" data-goto="overview"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble</a></li>
-                <li data-view="products"><a href="#" data-goto="products"><i class="fa-solid fa-box-open"></i> Produits</a></li>
-                <li data-view="entries"><a href="#" data-goto="entries"><i class="fa-solid fa-arrow-down-wide-short"></i> Entrees de stock</a></li>
-                <li data-view="exits"><a href="#" data-goto="exits"><i class="fa-solid fa-arrow-up-wide-short"></i> Sorties de stock</a></li>
-                <li data-view="history"><a href="#" data-goto="history"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a></li>
-                <li data-view="lowstock"><a href="#" data-goto="lowstock"><i class="fa-solid fa-triangle-exclamation"></i> Stock faible</a></li>
-                <li data-view="outofstock"><a href="#" data-goto="outofstock"><i class="fa-solid fa-circle-xmark"></i> Rupture de stock</a></li>
+                <li class="active" data-view="overview"><a href="dashboard-stock.html/overview" data-goto="overview"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble</a></li>
+                <li data-view="products"><a href="dashboard-stock.html/products" data-goto="products"><i class="fa-solid fa-box-open"></i> Produits</a></li>
+                <li data-view="entries"><a href="dashboard-stock.html/entries" data-goto="entries"><i class="fa-solid fa-arrow-down-wide-short"></i> Entrees de stock</a></li>
+                <li data-view="exits"><a href="dashboard-stock.html/exits" data-goto="exits"><i class="fa-solid fa-arrow-up-wide-short"></i> Sorties de stock</a></li>
+                <li data-view="history"><a href="dashboard-stock.html/history" data-goto="history"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a></li>
+                <li data-view="lowstock"><a href="dashboard-stock.html/lowstock" data-goto="lowstock"><i class="fa-solid fa-triangle-exclamation"></i> Stock faible</a></li>
+                <li data-view="outofstock"><a href="dashboard-stock.html/outofstock" data-goto="outofstock"><i class="fa-solid fa-circle-xmark"></i> Rupture de stock</a></li>
             </ul>
 
             <div class="sidebar-locked" title="Reserve a l'administrateur">
@@ -909,7 +909,7 @@
                         <h5 id="alertTitle">Actions requises</h5>
                         <p id="alertText"></p>
                     </div>
-                    <a href="#" class="btn_one btn_light ms-auto" data-goto="lowstock">Voir les alertes <i class="fa-solid fa-arrow-right"></i></a>
+                    <a href="dashboard-stock.html/lowstock" class="btn_one btn_light ms-auto" data-goto="lowstock">Voir les alertes <i class="fa-solid fa-arrow-right"></i></a>
                 </div>
 
                 <div class="stat-grid" id="statsGrid">
@@ -948,7 +948,7 @@
                         <div class="card-dash">
                             <div class="card-head">
                                 <h3>Produits a surveiller</h3>
-                                <a href="#" class="btn_one btn_light" data-goto="lowstock">Tout voir <i class="fa-solid fa-arrow-right"></i></a>
+                                <a href="dashboard-stock.html/lowstock" class="btn_one btn_light" data-goto="lowstock">Tout voir <i class="fa-solid fa-arrow-right"></i></a>
                             </div>
                             <div class="card-body table-wrap" style="padding-top:8px;">
                                 <table class="table table-dash mini-table" id="watchTable">
@@ -964,7 +964,7 @@
                         <div class="card-dash">
                             <div class="card-head">
                                 <h3>Derniers mouvements</h3>
-                                <a href="#" class="btn_one btn_light" data-goto="history">Historique <i class="fa-solid fa-arrow-right"></i></a>
+                                <a href="dashboard-stock.html/history" class="btn_one btn_light" data-goto="history">Historique <i class="fa-solid fa-arrow-right"></i></a>
                             </div>
                             <div class="card-body table-wrap" style="padding-top:8px;">
                                 <table class="table table-dash mini-table">
@@ -1579,8 +1579,18 @@
             document.getElementById('catList').innerHTML = cats.map(c => '<option value="' + esc(c) + '">').join('');
         }
 
-        /* ---------- Navigation ---------- */
-        function goto(view) {
+        /* ---------- Navigation (routing par URL) ---------- */
+        function getSectionFromUrl() {
+            const path = window.location.pathname;
+            const match = path.match(/\/dashboard-stock\.html\/([a-z]+)/);
+            if (match && PAGES[match[1]]) return match[1];
+            const qs = new URLSearchParams(window.location.search).get('section');
+            if (qs && PAGES[qs]) return qs;
+            return 'overview';
+        }
+
+        function showView(view) {
+            if (!PAGES[view]) view = 'overview';
             document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
             document.getElementById('view-' + view).style.display = 'block';
             document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.toggle('active', li.dataset.view === view));
@@ -1589,6 +1599,22 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
             renderAll();
         }
+
+        function goto(view) {
+            if (!PAGES[view]) view = 'overview';
+            const base = window.location.pathname.replace(/\/dashboard-stock\.html.*$/, '/dashboard-stock.html');
+            const url = base + '/' + view;
+            try {
+                history.pushState({ view: view }, '', url);
+            } catch (e) {
+                /* chemin non modifiable (file://) : navigation simple */
+            }
+            showView(view);
+        }
+
+        window.addEventListener('popstate', () => {
+            showView(getSectionFromUrl());
+        });
 
         document.querySelectorAll('[data-goto]').forEach(el => {
             el.addEventListener('click', e => {
@@ -1786,7 +1812,7 @@
         loadProducts();
         loadMoves();
         seedData();
-        renderAll();
+        showView(getSectionFromUrl());
     </script>
 
 </body>

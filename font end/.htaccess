@@ -1,0 +1,9 @@
+# eMarket - Routage par chemin pour le tableau de bord stock
+# Permet d'acceder a chaque section avec une URL du type :
+#   dashboard-stock.html/produits
+# Le navigateur conserve l'URL tandis que la page charge la bonne section.
+
+Options -MultiViews
+
+# Accepte les URL avec chemin apres le nom du fichier (ex: dashboard-stock.html/produits)
+AcceptPathInfo On

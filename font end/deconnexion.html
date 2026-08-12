@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <!-- Meta -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deconnexion - eMarket</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            text-decoration: none;
+            list-style: none;
+        }
+
+        body {
+            font-family: "DM Sans", sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 26px;
+            color: #4a5355;
+            background: #f4f5ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: "Jost", sans-serif;
+            color: #0b104a;
+            margin: 0;
+        }
+
+        a {
+            font-family: "Jost", sans-serif;
+            transition: all .2s ease 0s;
+        }
+
+        /* ===== WRAPPER SPLIT ===== */
+        .logout-wrapper {
+            display: flex;
+            width: 980px;
+            max-width: 100%;
+            min-height: 620px;
+            background: #fff;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(23, 23, 36, 0.18);
+        }
+
+        /* ===== PANNEAU GAUCHE ===== */
+        .left-panel {
+            width: 45%;
+            background: linear-gradient(160deg, #525fe1 0%, #3d4ad6 55%, #f26b65 140%);
+            padding: 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: "";
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            top: -120px;
+            right: -120px;
+        }
+
+        .left-panel::after {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            bottom: -80px;
+            left: -80px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand .logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 12px;
+            padding: 8px;
+        }
+
+        .brand h1 {
+            font-size: 26px;
+            line-height: 1.1;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .brand h1 span {
+            color: #ffd3d1;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: block;
+        }
+
+        .left-content p {
+            font-size: 17px;
+            line-height: 1.8;
+            max-width: 380px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-features {
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-features li {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+            font-size: 15px;
+        }
+
+        .left-features li i {
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.16);
+            border-radius: 50%;
+            font-size: 14px;
+        }
+
+        /* ===== PANNEAU DROIT ===== */
+        .right-panel {
+            width: 55%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+        }
+
+        .form-box {
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+        }
+
+        .logout-icon {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 26px;
+            border-radius: 50%;
+            background: #ffe8e6;
+            color: #f26b65;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+        }
+
+        .form-box h2 {
+            font-size: 38px;
+            font-weight: 700;
+            color: #0b104a;
+            margin-bottom: 12px;
+        }
+
+        .form-box h2 span {
+            color: #f26b65;
+        }
+
+        .subtitle {
+            color: #6b7185;
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .session-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            background: #ebecff;
+            color: #525fe1;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 30px;
+            padding: 8px 18px;
+            margin-bottom: 34px;
+        }
+
+        .btn-logout {
+            width: 100%;
+            background: #f26b65;
+            border: 1px solid #f26b65;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: "Jost", sans-serif;
+            cursor: pointer;
+            transition: .3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-logout:hover {
+            background: #525fe1;
+            border-color: #525fe1;
+            color: #fff;
+        }
+
+        .btn-cancel {
+            width: 100%;
+            background: #fff;
+            border: 1px solid #d9daf2;
+            color: #525fe1;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: "Jost", sans-serif;
+            cursor: pointer;
+            transition: .3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .btn-cancel:hover {
+            background: #ebecff;
+            border-color: #525fe1;
+        }
+
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 30px;
+            color: #6b7185;
+            font-size: 14px;
+            font-family: "Jost", sans-serif;
+        }
+
+        .back-home:hover {
+            color: #525fe1;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 820px) {
+            .logout-wrapper {
+                flex-direction: column;
+            }
+
+            .left-panel,
+            .right-panel {
+                width: 100%;
+            }
+
+            .left-panel {
+                padding: 35px;
+                text-align: center;
+                align-items: center;
+            }
+
+            .brand {
+                justify-content: center;
+            }
+
+            .left-content p {
+                max-width: 100%;
+                margin: 30px 0;
+            }
+
+            .left-features {
+                display: none;
+            }
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 0;
+            }
+
+            .logout-wrapper {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .form-box h2 {
+                font-size: 30px;
+            }
+
+            .right-panel {
+                padding: 35px 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="logout-wrapper">
+
+        <!-- Colonne gauche : présentation -->
+        <div class="left-panel">
+
+            <div class="brand">
+                <img src="assets/img/logo.png" alt="eMarket" class="logo">
+                <h1>eMarket <span>Gestion commerciale</span></h1>
+            </div>
+
+            <div class="left-content">
+                <p>
+                    eMarket reunit vos produits, votre stock, vos clients, vos devis,
+                    vos factures et vos paiements dans un seul espace.
+                </p>
+            </div>
+
+            <ul class="left-features">
+                <li><i class="fa-solid fa-boxes-stacked"></i> Produits et stock toujours a jour</li>
+                <li><i class="fa-solid fa-file-invoice-dollar"></i> Devis et factures faciles a creer</li>
+                <li><i class="fa-solid fa-chart-line"></i> Decisions eclairees en temps reel</li>
+            </ul>
+
+        </div>
+
+        <!-- Colonne droite : confirmation -->
+        <div class="right-panel">
+
+            <div class="form-box">
+                <a href="dashboard-stock.html" class="back-home"><i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord</a>
+
+                <div class="logout-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+
+                <h2>Deconnexion</h2>
+                <p class="subtitle">
+                    Etes-vous sur de vouloir vous deconnecter
+                    de votre espace de gestion eMarket ?
+                </p>
+
+                <div class="session-note">
+                    <i class="fa-solid fa-circle-user"></i>
+                    Session : Gestionnaire de stock
+                </div>
+
+                <a href="Connexion.html" class="btn-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Oui, me deconnecter
+                </a>
+
+                <a href="dashboard-stock.html" class="btn-cancel">
+                    <i class="fa-solid fa-arrow-left"></i> Non, rester connecte
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
