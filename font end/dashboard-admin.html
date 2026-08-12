@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 
 <head>
@@ -935,19 +935,16 @@
             <div class="module-tag"><i class="fa-solid fa-shield-halved me-1"></i> Module : Administration</div>
 
             <ul class="sidebar-nav">
-                <li class="active" data-view="overview"><a href="#" data-goto="overview"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble</a></li>
-                <li data-view="users"><a href="#" data-goto="users"><i class="fa-solid fa-users"></i> Utilisateurs</a></li>
+                <li class="nav-label">Utilisateurs</li>
+                <li class="active" data-view="users"><a href="#" data-goto="users"><i class="fa-solid fa-users"></i> Utilisateurs</a></li>
                 <li class="nav-sep"></li>
                 <li class="nav-label">Gestion</li>
                 <li data-view="products"><a href="#" data-goto="products"><i class="fa-solid fa-box-open"></i> Produits</a></li>
                 <li data-view="categories"><a href="#" data-goto="categories"><i class="fa-solid fa-tags"></i> Categories</a></li>
-                <li data-view="stock"><a href="#" data-goto="stock"><i class="fa-solid fa-boxes-stacked"></i> Stock</a></li>
-                <li data-view="clients"><a href="#" data-goto="clients"><i class="fa-solid fa-user-tie"></i> Clients</a></li>
-                <li data-view="quotes"><a href="#" data-goto="quotes"><i class="fa-solid fa-file-lines"></i> Devis</a></li>
-                <li data-view="invoices"><a href="#" data-goto="invoices"><i class="fa-solid fa-file-invoice"></i> Factures</a></li>
-                <li data-view="payments"><a href="#" data-goto="payments"><i class="fa-solid fa-money-check-dollar"></i> Paiements</a></li>
                 <li data-view="stats"><a href="#" data-goto="stats"><i class="fa-solid fa-chart-line"></i> Statistiques</a></li>
                 <li data-view="activity"><a href="#" data-goto="activity"><i class="fa-solid fa-clock-rotate-left"></i> Journal d'activite</a></li>
+                <li class="nav-sep"></li>
+                <li data-view="settings"><a href="#" data-goto="settings"><i class="fa-solid fa-user-gear"></i> Parametres</a></li>
             </ul>
 
             <div class="sidebar-footer">
@@ -966,112 +963,37 @@
                     <button class="burger" id="burgerBtn"><i class="fa-solid fa-bars"></i></button>
                     <div>
                         <div class="crumb"><b>eMarket</b> / Administration</div>
-                        <h1 id="pageTitle">Dashboard admin</h1>
+                        <h1 id="pageTitle">Gestion des utilisateurs</h1>
                     </div>
                 </div>
                 <div class="topbar-right">
                     <div class="user-chip">
                         <div class="avatar">AD</div>
                         <div class="u-info">
-                            <div class="u-name">Administrateur</div>
-                            <div class="u-role">Responsable de l'entreprise</div>
+                            <div class="u-name" id="chipUserName">Administrateur</div>
+                            <div class="u-role" id="chipUserRole">Responsable de l'entreprise</div>
                         </div>
                     </div>
                     <a href="index.html" class="btn_one" title="Retour a l'accueil"><i class="fa-solid fa-house"></i><span class="d-none d-md-inline">Site</span></a>
                 </div>
             </div>
 
-            <!-- ===== VUE D'ENSEMBLE ===== -->
-            <section id="view-overview" class="view active">
+            <!-- ===== UTILISATEURS ===== -->
+            <section id="view-users" class="view active">
 
                 <div class="dash-head">
                     <div>
                         <div class="eyebrow">Administration generale</div>
-                        <h1>Dashboard administrateur</h1>
-                        <p>L'administrateur est le responsable de l'entreprise : il cree et gere les utilisateurs, les produits, les categories, le stock, les clients, les devis, les factures, les paiements et consulte les statistiques.</p>
+                        <h1>Gestion des utilisateurs</h1>
+                        <p>L'administrateur est le responsable de l'entreprise : il cree, modifie et supprime les utilisateurs, active ou desactive les comptes, reinitialise les mots de passe et modifie les roles.</p>
                     </div>
-                    <div class="head-badge"><i class="fa-solid fa-screwdriver-wrench"></i> Configuration</div>
+                    <button class="btn_one" id="btnAddUser"><i class="fa-solid fa-user-plus"></i> Nouvel utilisateur</button>
                 </div>
 
-                <div class="stat-grid">
-                    <div class="stat-card">
-                        <div class="stat-ico ic1"><i class="fa-solid fa-users"></i></div>
-                        <div>
-                            <h2 id="stUsers">0</h2>
-                            <p>Utilisateurs</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-ico ic2"><i class="fa-solid fa-box-open"></i></div>
-                        <div>
-                            <h2>245</h2>
-                            <p>Produits references</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-ico ic3"><i class="fa-solid fa-user-tie"></i></div>
-                        <div>
-                            <h2>86</h2>
-                            <p>Clients actifs</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-ico ic4"><i class="fa-solid fa-receipt"></i></div>
-                        <div>
-                            <h2>57</h2>
-                            <p>Ventes enregistrees</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-ico ic5"><i class="fa-solid fa-money-check-dollar"></i></div>
-                        <div>
-                            <h2>4</h2>
-                            <p>Paiements en attente</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-lg-7">
-                        <div class="card-dash">
-                            <div class="card-head">
-                                <h3>Dernieres activites</h3>
-                                <a href="#" class="btn_one btn_light" data-goto="activity">Journal complet <i class="fa-solid fa-arrow-right"></i></a>
-                            </div>
-                            <div class="card-body table-wrap" style="padding-top:8px;">
-                                <table class="table table-dash mini-table">
-                                    <thead>
-                                        <tr><th>Date</th><th>Utilisateur</th><th>Action</th></tr>
-                                    </thead>
-                                    <tbody id="recentActivity"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5">
-                        <div class="card-dash">
-                            <div class="card-head">
-                                <h3>Actions rapides</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="quick-grid">
-                                    <div class="quick-item" data-goto="users"><i class="fa-solid fa-user-plus"></i> Nouvel utilisateur</div>
-                                    <div class="quick-item" data-goto="products"><i class="fa-solid fa-box-open"></i> Nouveau produit</div>
-                                    <div class="quick-item" data-goto="categories"><i class="fa-solid fa-tags"></i> Nouvelle categorie</div>
-                                    <div class="quick-item" data-goto="stats"><i class="fa-solid fa-chart-line"></i> Statistiques</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== UTILISATEURS ===== -->
-            <section id="view-users" class="view">
                 <div class="card-dash">
                     <div class="card-head">
-                        <h3>Gestion des utilisateurs</h3>
-                        <p class="mb-0" style="color:#8a8fb8;font-size:13.5px;">Creer, modifier, supprimer, activer/desactiver, reinitialiser le mot de passe et modifier le role.</p>
+                        <h3>Comptes utilisateurs</h3>
+                        <p class="mb-0" style="color:#8a8fb8;font-size:13.5px;">Creation avec mot de passe par defaut ou personnalise, modification, suppression, activation/desactivation, reinitialisation et changement de role.</p>
                     </div>
                     <div class="card-body">
                         <div class="toolbar mb-3">
@@ -1079,7 +1001,6 @@
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <input type="text" id="userSearch" placeholder="Rechercher un utilisateur (nom, email, role)...">
                             </div>
-                            <button class="btn_one" id="btnAddUser"><i class="fa-solid fa-plus"></i> Nouvel utilisateur</button>
                         </div>
                         <div class="table-wrap">
                             <table class="table table-dash">
@@ -1087,6 +1008,7 @@
                                     <tr>
                                         <th>Utilisateur</th>
                                         <th>Role</th>
+                                        <th>Mot de passe</th>
                                         <th>Statut</th>
                                         <th style="text-align:right;">Actions</th>
                                     </tr>
@@ -1112,7 +1034,7 @@
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <input type="text" id="productSearch" placeholder="Rechercher un produit...">
                             </div>
-                            <a href="dashboard-stock.html" class="btn_one btn_light"><i class="fa-solid fa-boxes-stacked"></i> Gerer le stock</a>
+                            <button class="btn_one" id="btnAddProduct"><i class="fa-solid fa-plus"></i> Nouveau produit</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -1126,10 +1048,15 @@
                                         <th>Prix vente</th>
                                         <th>Quantite</th>
                                         <th>Statut</th>
+                                        <th style="text-align:right;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="productsBody"></tbody>
                             </table>
+                            <div class="empty-state" id="productsEmpty" style="display:none;">
+                                <i class="fa-solid fa-box-open"></i>
+                                <p>Aucun produit ne correspond a votre recherche.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1160,158 +1087,49 @@
                 </div>
             </section>
 
-            <!-- ===== STOCK ===== -->
-            <section id="view-stock" class="view">
-                <div class="card-dash">
-                    <div class="card-head">
-                        <h3>Consultez et gerez le stock</h3>
-                    </div>
-                    <div class="card-body">
-                        <p style="color:#8a8fb8;font-size:14px;">Le suivi complet du stock (entrees, sorties, historique, alertes) se fait dans le module Stock.</p>
-                        <div class="mt-2">
-                            <a href="dashboard-stock.html" class="btn_one"><i class="fa-solid fa-boxes-stacked"></i> Ouvrir le module Stock</a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== CLIENTS ===== -->
-            <section id="view-clients" class="view">
-                <div class="card-dash">
-                    <div class="card-head">
-                        <h3>Consultation des clients</h3>
-                        <div class="search-box">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="clientSearch" placeholder="Rechercher un client...">
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-wrap">
-                            <table class="table table-dash">
-                                <thead>
-                                    <tr>
-                                        <th>Client</th>
-                                        <th>Email</th>
-                                        <th>Telephone</th>
-                                        <th>Statut</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="clientsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== DEVIS ===== -->
-            <section id="view-quotes" class="view">
-                <div class="card-dash">
-                    <div class="card-head">
-                        <h3>Consultation des devis</h3>
-                        <button class="btn_one" id="btnAddQuote"><i class="fa-solid fa-plus"></i> Nouveau devis</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-wrap">
-                            <table class="table table-dash">
-                                <thead>
-                                    <tr>
-                                        <th>Numero</th>
-                                        <th>Client</th>
-                                        <th>Date</th>
-                                        <th>Montant</th>
-                                        <th>Statut</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="quotesBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== FACTURES ===== -->
-            <section id="view-invoices" class="view">
-                <div class="card-dash">
-                    <div class="card-head">
-                        <h3>Consultation des factures</h3>
-                        <button class="btn_one" id="btnAddInvoice"><i class="fa-solid fa-plus"></i> Nouvelle facture</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-wrap">
-                            <table class="table table-dash">
-                                <thead>
-                                    <tr>
-                                        <th>Numero</th>
-                                        <th>Client</th>
-                                        <th>Date</th>
-                                        <th>Montant</th>
-                                        <th>Statut</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="invoicesBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== PAIEMENTS ===== -->
-            <section id="view-payments" class="view">
-                <div class="card-dash">
-                    <div class="card-head">
-                        <h3>Consultation des paiements</h3>
-                        <div class="search-box">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="paymentSearch" placeholder="Rechercher un paiement...">
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-wrap">
-                            <table class="table table-dash">
-                                <thead>
-                                    <tr>
-                                        <th>Reference</th>
-                                        <th>Client</th>
-                                        <th>Document</th>
-                                        <th>Montant</th>
-                                        <th>Date</th>
-                                        <th>Methode</th>
-                                        <th>Statut</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="paymentsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- ===== STATISTIQUES ===== -->
             <section id="view-stats" class="view">
                 <div class="card-dash">
                     <div class="card-head">
-                        <h3>Statistiques de vente</h3>
-                        <span class="badge-st bs-info">Derniers 6 mois</span>
+                        <h3>Statistiques</h3>
+                        <span class="badge-st bs-info">Vue globale</span>
                     </div>
                     <div class="card-body">
-                        <h5 class="mb-2" style="font-weight:600;">Ventes par mois</h5>
+                        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                            <div class="stat-card">
+                                <div class="stat-ico ic1"><i class="fa-solid fa-box-open"></i></div>
+                                <div>
+                                    <h2 id="stProducts">0</h2>
+                                    <p>Produits references</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-ico ic2"><i class="fa-solid fa-boxes-stacked"></i></div>
+                                <div>
+                                    <h2 id="stQty">0</h2>
+                                    <p>Unites en stock</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-ico ic3"><i class="fa-solid fa-sack-dollar"></i></div>
+                                <div>
+                                    <h2 id="stValue">0 FCFA</h2>
+                                    <p>Valeur du stock (achat)</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-ico ic4"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                <div>
+                                    <h2 id="stAlert">0</h2>
+                                    <p>Produits a surveiller</p>
+                                </div>
+                            </div>
+                        </div>
+                        <h5 class="mb-2 mt-2" style="font-weight:600;">Ventes par mois</h5>
                         <div id="monthlyStats"></div>
-                        <h5 class="mt-3 mb-2" style="font-weight:600;">Revenus totaux</h5>
-                        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-                            <div class="stat-card">
-                                <div class="stat-ico ic1"><i class="fa-solid fa-sack-dollar"></i></div>
-                                <div>
-                                    <h2>4 850 000</h2>
-                                    <p>FCFA encaisses</p>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-ico ic4"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                                <div>
-                                    <h2>+12%</h2>
-                                    <p>Progression</p>
-                                </div>
-                            </div>
+                        <div class="stat-row mt-2">
+                            <span class="sr-label">Revenus encaisses (6 derniers mois)</span>
+                            <span class="sr-val">4 850 000 FCFA</span>
                         </div>
                     </div>
                 </div>
@@ -1345,6 +1163,56 @@
                 </div>
             </section>
 
+            <!-- ===== PARAMETRES ===== -->
+            <section id="view-settings" class="view">
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <div class="card-dash">
+                            <div class="card-head">
+                                <h3>Mon profil</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label" for="setName">Nom complet *</label>
+                                    <input type="text" class="form-control" id="setName" placeholder="Votre nom complet">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="setEmail">Email *</label>
+                                    <input type="email" class="form-control" id="setEmail" placeholder="Votre email">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="setRole">Role</label>
+                                    <input type="text" class="form-control" id="setRole" disabled>
+                                </div>
+                                <button class="btn_one" id="btnSaveProfile"><i class="fa-solid fa-check"></i> Enregistrer le profil</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card-dash">
+                            <div class="card-head">
+                                <h3>Changer le mot de passe</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label" for="setCurrentPwd">Mot de passe actuel *</label>
+                                    <input type="password" class="form-control" id="setCurrentPwd" autocomplete="off" placeholder="Votre mot de passe actuel">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="setNewPwd">Nouveau mot de passe *</label>
+                                    <input type="password" class="form-control" id="setNewPwd" autocomplete="new-password" placeholder="Au moins 4 caracteres">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="setConfirmPwd">Confirmer le nouveau mot de passe *</label>
+                                    <input type="password" class="form-control" id="setConfirmPwd" autocomplete="new-password" placeholder="Repetez le nouveau mot de passe">
+                                </div>
+                                <button class="btn_one" id="btnChangePwd"><i class="fa-solid fa-lock"></i> Mettre a jour le mot de passe</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -1373,14 +1241,17 @@
                                 <select class="form-select" id="ufRole" required>
                                     <option value="">-- Choisir un role --</option>
                                     <option value="Administrateur">Administrateur</option>
-                                    <option value="Gerant">Gerant</option>
-                                    <option value="Agent">Agent</option>
-                                    <option value="Vendeuse">Vendeuse</option>
+                                    <option value="Gérant de stock">Gérant de stock</option>
+                                    <option value="Caissier">Caissier</option>
                                 </select>
                             </div>
                             <div class="col-md-6" id="ufPasswordWrap">
-                                <label class="form-label" for="ufPassword">Mot de passe</label>
-                                <input type="text" class="form-control" id="ufPassword" placeholder="Laisser vide pour conserver">
+                                <label class="form-label">Mot de passe</label>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="ufDefaultPwd" checked>
+                                    <label class="form-check-label" for="ufDefaultPwd" style="font-size:13px;font-weight:600;color:#1a2d62;">Mot de passe par defaut (123456)</label>
+                                </div>
+                                <input type="text" class="form-control" id="ufPassword" placeholder="Choisir un mot de passe personnalise" style="display:none;">
                             </div>
                         </div>
                     </form>
@@ -1388,6 +1259,68 @@
                 <div class="modal-footer">
                     <button type="button" class="btn_one btn_ghost" data-bs-dismiss="modal">Annuler</button>
                     <button type="button" class="btn_one" id="btnSaveUser"><i class="fa-solid fa-check"></i> Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL PRODUIT ===== -->
+    <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalTitle">Nouveau produit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <input type="hidden" id="pfId">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label" for="pfName">Nom du produit *</label>
+                                <input type="text" class="form-control" id="pfName" required placeholder="Ex : Riz parfume 5kg">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="pfRef">Reference</label>
+                                <input type="text" class="form-control" id="pfRef" placeholder="Ex : REF-001">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="pfCat">Categorie</label>
+                                <input type="text" class="form-control" id="pfCat" list="catList" placeholder="Ex : Alimentation">
+                                <datalist id="catList"></datalist>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="pfUnit">Unite</label>
+                                <select class="form-select" id="pfUnit">
+                                    <option value="unite">unite(s)</option>
+                                    <option value="kg">kg</option>
+                                    <option value="litre">litre(s)</option>
+                                    <option value="carton">carton(s)</option>
+                                    <option value="sachet">sachet(s)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="pfMin">Seuil d'alerte</label>
+                                <input type="number" class="form-control" id="pfMin" min="0" step="1" value="5">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="pfBuy">Prix d'achat (FCFA)</label>
+                                <input type="number" class="form-control" id="pfBuy" min="0" step="0.01" placeholder="Ex : 5000">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="pfSell">Prix de vente (FCFA)</label>
+                                <input type="number" class="form-control" id="pfSell" min="0" step="0.01" placeholder="Ex : 6500">
+                            </div>
+                            <div class="col-md-4" id="initQtyWrap">
+                                <label class="form-label" for="pfInitQty">Quantite initiale</label>
+                                <input type="number" class="form-control" id="pfInitQty" min="0" step="1" value="0">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn_one btn_ghost" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn_one" id="btnSaveProduct"><i class="fa-solid fa-check"></i> Enregistrer</button>
                 </div>
             </div>
         </div>
@@ -1422,6 +1355,36 @@
         </div>
     </div>
 
+    <!-- ===== MODAL REINITIALISATION MOT DE PASSE ===== -->
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reinitialiser le mot de passe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="passwordForm">
+                        <input type="hidden" id="pwUserId">
+                        <p style="color:#8a8fb8;font-size:14px;">Vous allez reinitialiser le mot de passe de <b id="pwUserName" style="color:var(--dark);"></b>.</p>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="pwDefault" checked>
+                            <label class="form-check-label" for="pwDefault" style="font-size:13.5px;font-weight:600;color:#1a2d62;">Reinitialiser au mot de passe par defaut (123456)</label>
+                        </div>
+                        <div id="pwCustomWrap" style="display:none;">
+                            <label class="form-label" for="pwNewPassword">Nouveau mot de passe *</label>
+                            <input type="text" class="form-control" id="pwNewPassword" placeholder="Saisir un nouveau mot de passe">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn_one btn_ghost" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn_one" id="btnSavePassword"><i class="fa-solid fa-key"></i> Reinitialiser</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== MODAL SUPPRESSION ===== -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -1447,27 +1410,29 @@
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
     <script>
         /* ============================================================
-           eMarket - Dashboard Admin
+           eMarket - Dashboard Admin (roles : Administrateur,
+           Gerant de stock, Caissier) - page de demonstration
            ============================================================ */
 
         const STORE_USERS = 'emarket_admin_users';
         const STORE_ACTIVITY = 'emarket_admin_activity';
+        const STORE_PRODUCTS = 'emarket_stock_products';
+        const STORE_CATEGORIES = 'emarket_admin_categories';
+        const STORE_PROFILE = 'emarket_admin_profile';
+        const DEFAULT_PWD = '123456';
+        const USERS_VERSION = 2;
+        const ROLES = ['Administrateur', 'Gérant de stock', 'Caissier'];
 
         const PAGES = {
-            overview: 'Dashboard admin',
             users: 'Gestion des utilisateurs',
             products: 'Gestion des produits',
             categories: 'Gestion des categories',
-            stock: 'Gestion du stock',
-            clients: 'Consultation des clients',
-            quotes: 'Consultation des devis',
-            invoices: 'Consultation des factures',
-            payments: 'Consultation des paiements',
-            stats: 'Statistiques de vente',
-            activity: "Journal d'activite"
+            stats: 'Statistiques',
+            activity: "Journal d'activite",
+            settings: 'Parametres'
         };
 
-        /* ---------- Sidebar / navigation ---------- */
+        /* ---------- Navigation ---------- */
         const sidebar = document.getElementById('sidebar');
         const backdrop = document.getElementById('sidebarBackdrop');
         const burger = document.getElementById('burgerBtn');
@@ -1481,7 +1446,6 @@
             sidebar.classList.toggle('open');
             backdrop.classList.toggle('show');
         });
-
         backdrop.addEventListener('click', closeSidebar);
 
         function goTo(view) {
@@ -1497,19 +1461,10 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        document.querySelectorAll('.sidebar-nav li[data-view] a, [data-goto]').forEach(el => {
-            el.addEventListener('click', (e) => {
-                const view = el.getAttribute('data-goto');
-                if (view && PAGES[view]) {
-                    e.preventDefault();
-                    goTo(view);
-                }
-            });
-        });
-
-        document.querySelectorAll('.quick-item').forEach(item => {
-            item.addEventListener('click', () => {
-                goTo(item.getAttribute('data-goto'));
+        document.querySelectorAll('.sidebar-nav li[data-view] a').forEach(el => {
+            el.addEventListener('click', e => {
+                e.preventDefault();
+                goTo(el.getAttribute('data-goto'));
             });
         });
 
@@ -1542,7 +1497,13 @@
             return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
         }
 
-        /* ---------- Utilisateurs (localStorage) ---------- */
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        /* ============================================================
+           UTILISATEURS
+           ============================================================ */
         function loadUsers() {
             try { return JSON.parse(localStorage.getItem(STORE_USERS)) || []; }
             catch (e) { return []; }
@@ -1553,34 +1514,41 @@
         }
 
         function seedUsers() {
-            let users = loadUsers();
-            if (users.length) return users;
-            users = [
-                { id: uid(), name: 'Jean Kossi', email: 'jean@entreprise.com', role: 'Administrateur', active: true },
-                { id: uid(), name: 'Clarisse Mensah', email: 'clarisse@entreprise.com', role: 'Gerant', active: true },
-                { id: uid(), name: 'Samuel A.', email: 'samuel@entreprise.com', role: 'Agent', active: true },
-                { id: uid(), name: 'Marie Zinsou', email: 'marie@entreprise.com', role: 'Vendeuse', active: false }
+            let u = loadUsers();
+            if (u.length) return u;
+            u = [
+                { id: uid(), name: 'Administrateur', email: 'admin@emarket.com', role: 'Administrateur', active: true, password: DEFAULT_PWD },
+                { id: uid(), name: 'Gérant de stock', email: 'gerant@emarket.com', role: 'Gérant de stock', active: true, password: DEFAULT_PWD },
+                { id: uid(), name: 'Caissier', email: 'caissier@emarket.com', role: 'Caissier', active: true, password: DEFAULT_PWD }
             ];
-            saveUsers(users);
-            return users;
+            saveUsers(u);
+            return u;
         }
+
+        (function migrateUsers() {
+            const v = Number(localStorage.getItem('emarket_admin_users_ver') || 0);
+            if (v < USERS_VERSION) {
+                localStorage.removeItem(STORE_USERS);
+                localStorage.setItem('emarket_admin_users_ver', String(USERS_VERSION));
+            }
+        })();
 
         let users = seedUsers();
         let userSearch = '';
 
+        function currentAdminName() {
+            const a = users.find(u => u.role === 'Administrateur');
+            return a ? a.name : 'Administrateur';
+        }
+
         function renderUsers() {
-            const list = users.filter(u => {
-                const q = userSearch.toLowerCase();
-                return !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q);
-            });
-            const tbody = document.getElementById('usersBody');
-            tbody.innerHTML = '';
-            document.getElementById('usersEmpty').style.display = list.length ? 'none' : 'block';
-            list.forEach(u => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><div class="td-title">${u.name}</div><div class="td-sub">${u.email}</div></td>
-                    <td><span class="badge-st bs-info">${u.role}</span></td>
+            const q = userSearch.toLowerCase();
+            const list = users.filter(u => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q));
+            document.getElementById('usersBody').innerHTML = list.map(u => `
+                <tr>
+                    <td><div class="td-title">${esc(u.name)}</div><div class="td-sub">${esc(u.email)}</div></td>
+                    <td><span class="badge-st bs-info">${esc(u.role)}</span></td>
+                    <td><span class="badge-st bs-gray" title="Mot de passe actuel : ${esc(u.password || DEFAULT_PWD)}">${u.password ? '••••••' : 'defaut'}</span></td>
                     <td><span class="badge-st ${u.active ? 'bs-ok' : 'bs-bad'}">${u.active ? 'Actif' : 'Desactive'}</span></td>
                     <td>
                         <div class="row-actions">
@@ -1589,12 +1557,14 @@
                             <button class="icon-btn" title="${u.active ? 'Desactiver' : 'Activer'}" data-toggle="${u.id}"><i class="fa-solid ${u.active ? 'fa-user-slash' : 'fa-user-check'}"></i></button>
                             <button class="icon-btn del" title="Supprimer" data-del="${u.id}"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                    </td>`;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('stUsers').textContent = users.length;
+                    </td>
+                </tr>`).join('');
+            document.getElementById('usersEmpty').style.display = list.length ? 'none' : 'block';
         }
 
+        document.getElementById('userSearch').addEventListener('input', e => { userSearch = e.target.value; renderUsers(); });
+
+        /* ---------- Journal d'activite ---------- */
         function logActivity(user, action, detail) {
             let log = [];
             try { log = JSON.parse(localStorage.getItem(STORE_ACTIVITY)) || []; } catch (e) {}
@@ -1611,47 +1581,33 @@
             if (log.length) return;
             const now = Date.now();
             log = [
-                { id: uid(), date: now - 3600000 * 2, user: 'Jean Kossi', action: 'Creation utilisateur', detail: "Compte de Marie Zinsou cree" },
-                { id: uid(), date: now - 3600000 * 5, user: 'Clarisse Mensah', action: 'Modification produit', detail: 'Prix de vente mis a jour' },
-                { id: uid(), date: now - 86400000, user: 'Samuel A.', action: 'Nouvelle vente', detail: 'Facture FAC-0056 creee' },
-                { id: uid(), date: now - 86400000 * 2, user: 'Jean Kossi', action: 'Reinitialisation mot de passe', detail: 'Compte de l agent' }
+                { id: uid(), date: now - 3600000 * 2, user: 'Administrateur', action: 'Creation utilisateur', detail: 'Compte du caissier cree' },
+                { id: uid(), date: now - 3600000 * 5, user: 'Gérant de stock', action: 'Modification produit', detail: 'Prix de vente mis a jour' },
+                { id: uid(), date: now - 86400000, user: 'Caissier', action: 'Nouvelle vente', detail: 'Facture FAC-0056 creee' },
+                { id: uid(), date: now - 86400000 * 2, user: 'Administrateur', action: 'Reinitialisation mot de passe', detail: 'Compte du gerant' }
             ];
             localStorage.setItem(STORE_ACTIVITY, JSON.stringify(log));
         }
 
         seedActivity();
 
-        function renderActivity() {
-            const rows = activityRows();
-            const recent = rows.slice(0, 5);
-            document.getElementById('recentActivity').innerHTML = recent.map(r => `
-                <tr><td>${fmtDate(r.date)}</td><td><span class="td-title">${r.user}</span></td><td>${r.action}</td></tr>`).join('');
-            renderFullActivity();
-        }
-
         let activitySearch = '';
-        function renderFullActivity() {
+        function renderActivity() {
             const rows = activityRows().filter(r => {
                 const q = activitySearch.toLowerCase();
                 return !q || r.user.toLowerCase().includes(q) || r.action.toLowerCase().includes(q) || (r.detail || '').toLowerCase().includes(q);
             });
             document.getElementById('activityBody').innerHTML = rows.map(r => `
-                <tr><td>${fmtDate(r.date)}</td><td><span class="td-title">${r.user}</span></td><td>${r.action}</td><td class="td-sub">${r.detail || ''}</td></tr>`).join('')
+                <tr><td>${fmtDate(r.date)}</td><td><span class="td-title">${esc(r.user)}</span></td><td>${esc(r.action)}</td><td class="td-sub">${esc(r.detail || '')}</td></tr>`).join('')
                 || '<tr><td colspan="4"><div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>Aucune activite enregistree.</p></div></td></tr>';
         }
 
         document.getElementById('activitySearch').addEventListener('input', e => {
             activitySearch = e.target.value;
-            renderFullActivity();
-        });
-
-        document.getElementById('userSearch').addEventListener('input', e => {
-            userSearch = e.target.value;
-            renderUsers();
+            renderActivity();
         });
 
         /* ---------- CRUD Utilisateur ---------- */
-        let userModal = new bootstrap.Modal(document.getElementById('userModal'));
         let editingUserId = null;
         let deleteContext = null;
 
@@ -1661,8 +1617,17 @@
             document.getElementById('userForm').reset();
             document.getElementById('ufId').value = '';
             document.getElementById('ufPasswordWrap').style.display = 'block';
-            document.getElementById('ufPassword').required = true;
-            userModal.show();
+            document.getElementById('ufDefaultPwd').checked = true;
+            document.getElementById('ufPassword').style.display = 'none';
+            document.getElementById('ufPassword').required = false;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal')).show();
+        });
+
+        document.getElementById('ufDefaultPwd').addEventListener('change', e => {
+            const pwd = document.getElementById('ufPassword');
+            pwd.style.display = e.target.checked ? 'none' : 'block';
+            pwd.required = !e.target.checked;
+            if (!e.target.checked) pwd.focus();
         });
 
         document.getElementById('usersBody').addEventListener('click', e => {
@@ -1678,25 +1643,28 @@
                 document.getElementById('ufName').value = user.name;
                 document.getElementById('ufEmail').value = user.email;
                 document.getElementById('ufRole').value = user.role;
-                document.getElementById('ufPassword').value = '';
                 document.getElementById('ufPasswordWrap').style.display = 'none';
                 document.getElementById('ufPassword').required = false;
-                userModal.show();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal')).show();
             } else if (btn.hasAttribute('data-reset')) {
-                logActivity('Jean Kossi', 'Reinitialisation mot de passe', 'Compte de ' + user.name);
-                renderUsers(); renderActivity();
-                toast("Mot de passe reinitialise pour " + user.name, 'ok');
+                document.getElementById('pwUserId').value = user.id;
+                document.getElementById('pwUserName').textContent = user.name;
+                document.getElementById('pwDefault').checked = true;
+                document.getElementById('pwCustomWrap').style.display = 'none';
+                document.getElementById('pwNewPassword').value = '';
+                document.getElementById('pwNewPassword').required = false;
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('passwordModal')).show();
             } else if (btn.hasAttribute('data-toggle')) {
                 user.active = !user.active;
                 saveUsers(users);
-                logActivity('Jean Kossi', user.active ? 'Activation compte' : 'Desactivation compte', 'Compte de ' + user.name);
+                logActivity(currentAdminName(), user.active ? 'Activation compte' : 'Desactivation compte', 'Compte de ' + user.name);
                 renderUsers(); renderActivity();
                 toast('Compte ' + (user.active ? 'active' : 'desactive') + ' : ' + user.name, 'ok');
             } else if (btn.hasAttribute('data-del')) {
                 deleteContext = { type: 'user', id: user.id, name: user.name };
                 document.getElementById('deleteModalTitle').textContent = 'Supprimer un utilisateur';
                 document.getElementById('deleteTargetName').textContent = user.name;
-                new bootstrap.Modal(document.getElementById('deleteModal')).show();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
             }
         });
 
@@ -1708,92 +1676,224 @@
             if (editingUserId) {
                 const u = users.find(x => x.id === editingUserId);
                 u.name = name; u.email = email; u.role = role;
-                logActivity('Jean Kossi', 'Modification utilisateur', 'Compte de ' + name);
+                logActivity(currentAdminName(), 'Modification utilisateur', 'Compte de ' + name);
                 toast('Utilisateur modifie avec succes.', 'ok');
             } else {
-                users.push({ id: uid(), name, email, role, active: true });
-                logActivity('Jean Kossi', 'Creation utilisateur', 'Compte de ' + name);
+                const useDefault = document.getElementById('ufDefaultPwd').checked;
+                const password = useDefault ? DEFAULT_PWD : document.getElementById('ufPassword').value.trim();
+                if (!password) { toast('Veuillez saisir un mot de passe.', 'err'); return; }
+                users.push({ id: uid(), name, email, role, active: true, password });
+                logActivity(currentAdminName(), 'Creation utilisateur', 'Compte de ' + name);
                 toast('Utilisateur cree avec succes.', 'ok');
             }
             saveUsers(users);
             renderUsers(); renderActivity();
-            userModal.hide();
+            bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
         });
 
-        /* ---------- Suppression ---------- */
-        document.getElementById('btnConfirmDelete').addEventListener('click', () => {
-            if (!deleteContext) return;
-            if (deleteContext.type === 'user') {
-                users = users.filter(u => u.id !== deleteContext.id);
-                saveUsers(users);
-                logActivity('Jean Kossi', 'Suppression utilisateur', 'Compte de ' + deleteContext.name);
-                renderUsers();
-            } else if (deleteContext.type === 'category') {
-                categories = categories.filter(c => c.id !== deleteContext.id);
-                saveCategories();
-                renderCategories();
-            }
-            renderActivity();
-            new bootstrap.Modal(document.getElementById('deleteModal')).hide();
-            toast('Suppression effectuee.', 'ok');
+        /* ---------- Reinitialisation mot de passe ---------- */
+        document.getElementById('pwDefault').addEventListener('change', e => {
+            const wrap = document.getElementById('pwCustomWrap');
+            wrap.style.display = e.target.checked ? 'none' : 'block';
+            document.getElementById('pwNewPassword').required = !e.target.checked;
+            if (!e.target.checked) document.getElementById('pwNewPassword').focus();
         });
 
-        /* ---------- Produits (donnees demo) ---------- */
-        const PRODUCTS = [
-            { name: 'Riz parfume 5kg', cat: 'Alimentation', buy: 4200, sell: 5200, qty: 24 },
-            { name: 'Huile vegetale 1L', cat: 'Alimentation', buy: 1400, sell: 1800, qty: 45 },
-            { name: 'Savon liquide 500ml', cat: 'Hygiene', buy: 900, sell: 1300, qty: 5 },
-            { name: 'Sucre en poudre 1kg', cat: 'Alimentation', buy: 950, sell: 1250, qty: 60 },
-            { name: 'Cahier 100 pages', cat: 'Fournitures', buy: 350, sell: 550, qty: 80 }
-        ];
+        document.getElementById('btnSavePassword').addEventListener('click', () => {
+            const id = document.getElementById('pwUserId').value;
+            const u = users.find(x => x.id === id);
+            if (!u) return;
+            const useDefault = document.getElementById('pwDefault').checked;
+            const newPwd = useDefault ? DEFAULT_PWD : document.getElementById('pwNewPassword').value.trim();
+            if (!newPwd) { toast('Veuillez saisir le nouveau mot de passe.', 'err'); return; }
+            u.password = newPwd;
+            saveUsers(users);
+            logActivity(currentAdminName(), 'Reinitialisation mot de passe', 'Compte de ' + u.name);
+            renderUsers(); renderActivity();
+            bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+            toast('Mot de passe reinitialise pour ' + u.name, 'ok');
+        });
 
+        /* ============================================================
+           PRODUITS (catalogue partage avec le module Stock)
+           ============================================================ */
+        function loadProducts() {
+            try { return JSON.parse(localStorage.getItem(STORE_PRODUCTS)) || []; }
+            catch (e) { return []; }
+        }
+
+        function saveProducts() {
+            localStorage.setItem(STORE_PRODUCTS, JSON.stringify(products));
+        }
+
+        function seedProducts() {
+            let p = loadProducts();
+            if (p.length) return p;
+            p = [
+                { name: 'Riz parfume 5kg', ref: 'REF-001', cat: 'Alimentation', unit: 'sachet', min: 10, buy: 4200, sell: 5200, qty: 0 },
+                { name: 'Huile vegetale 1L', ref: 'REF-002', cat: 'Alimentation', unit: 'litre', min: 10, buy: 1400, sell: 1800, qty: 24 },
+                { name: 'Savon liquide 500ml', ref: 'REF-003', cat: 'Hygiène', unit: 'unite', min: 8, buy: 900, sell: 1300, qty: 5 },
+                { name: 'Sucre en poudre 1kg', ref: 'REF-004', cat: 'Alimentation', unit: 'sachet', min: 20, buy: 950, sell: 1250, qty: 45 },
+                { name: 'Cahier 100 pages', ref: 'REF-005', cat: 'Fournitures', unit: 'unite', min: 15, buy: 350, sell: 550, qty: 3 },
+                { name: 'Lait en poudre 400g', ref: 'REF-006', cat: 'Alimentation', unit: 'sachet', min: 5, buy: 1600, sell: 2100, qty: 12 },
+                { name: "Eau minerale 1,5L", ref: 'REF-007', cat: 'Boissons', unit: 'unite', min: 24, buy: 250, sell: 400, qty: 60 },
+                { name: 'Pates alimentaires 500g', ref: 'REF-008', cat: 'Alimentation', unit: 'sachet', min: 12, buy: 350, sell: 550, qty: 0 },
+                { name: 'Stylo bleu', ref: 'REF-009', cat: 'Fournitures', unit: 'unite', min: 30, buy: 100, sell: 200, qty: 80 },
+                { name: 'Detergent 1L', ref: 'REF-010', cat: 'Hygiène', unit: 'litre', min: 10, buy: 1100, sell: 1500, qty: 6 }
+            ];
+            products = p.map(x => ({ id: uid(), ...x }));
+            saveProducts();
+            return products;
+        }
+
+        let products = seedProducts();
         let productSearch = '';
+
+        function getStatus(p) {
+            if (p.qty <= 0) return { label: 'Rupture', cls: 'bs-bad' };
+            if (p.qty < p.min) return { label: 'Stock faible', cls: 'bs-warn' };
+            return { label: 'Disponible', cls: 'bs-ok' };
+        }
+
         function renderProducts() {
             const q = productSearch.toLowerCase();
-            const list = PRODUCTS.filter(p => !q || p.name.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q));
+            const list = products.filter(p => !q || p.name.toLowerCase().includes(q) || (p.ref || '').toLowerCase().includes(q) || (p.cat || '').toLowerCase().includes(q));
             document.getElementById('productsBody').innerHTML = list.map(p => {
-                const st = p.qty <= 0 ? { l: 'Rupture', c: 'bs-bad' } : p.qty < 10 ? { l: 'Stock faible', c: 'bs-warn' } : { l: 'Disponible', c: 'bs-ok' };
+                const st = getStatus(p);
                 return `<tr>
-                    <td><div class="td-title">${p.name}</div></td>
-                    <td>${p.cat}</td>
+                    <td><div class="td-title">${esc(p.name)}</div><div class="td-sub">${p.ref ? 'Ref : ' + esc(p.ref) : 'Sans reference'}</div></td>
+                    <td>${esc(p.cat || '—')}</td>
                     <td>${fmtMoney(p.buy)}</td>
                     <td>${fmtMoney(p.sell)}</td>
-                    <td>${p.qty}</td>
-                    <td><span class="badge-st ${st.c}">${st.l}</span></td>
+                    <td><span class="qty-pill">${p.qty}</span> ${esc(p.unit || 'unite')}</td>
+                    <td><span class="badge-st ${st.cls}">${st.label}</span></td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="icon-btn" title="Modifier" data-pedit="${p.id}"><i class="fa-solid fa-pen"></i></button>
+                            <button class="icon-btn del" title="Supprimer" data-pdel="${p.id}"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
+            document.getElementById('productsEmpty').style.display = list.length ? 'none' : 'block';
         }
+
         document.getElementById('productSearch').addEventListener('input', e => { productSearch = e.target.value; renderProducts(); });
 
-        /* ---------- Categories (localStorage) ---------- */
-        const STORE_CATEGORIES = 'emarket_admin_categories';
+        function fillCatList() {
+            const cats = [...new Set(products.map(p => p.cat).filter(Boolean))];
+            document.getElementById('catList').innerHTML = cats.map(c => '<option value="' + esc(c) + '">').join('');
+        }
+
+        function openProductModal(id) {
+            const form = document.getElementById('productForm');
+            form.reset();
+            document.getElementById('pfId').value = '';
+            document.getElementById('initQtyWrap').style.display = 'block';
+            fillCatList();
+            if (id) {
+                const p = products.find(x => x.id === id);
+                if (!p) return;
+                document.getElementById('productModalTitle').textContent = 'Modifier le produit';
+                document.getElementById('pfId').value = p.id;
+                document.getElementById('pfName').value = p.name;
+                document.getElementById('pfRef').value = p.ref || '';
+                document.getElementById('pfCat').value = p.cat || '';
+                document.getElementById('pfUnit').value = p.unit || 'unite';
+                document.getElementById('pfMin').value = p.min;
+                document.getElementById('pfBuy').value = p.buy;
+                document.getElementById('pfSell').value = p.sell;
+                document.getElementById('initQtyWrap').style.display = 'none';
+            } else {
+                document.getElementById('productModalTitle').textContent = 'Nouveau produit';
+            }
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('productModal')).show();
+        }
+
+        document.getElementById('btnAddProduct').addEventListener('click', () => openProductModal(null));
+
+        document.getElementById('productsBody').addEventListener('click', e => {
+            const btn = e.target.closest('.icon-btn');
+            if (!btn) return;
+            const id = btn.getAttribute('data-pedit') || btn.getAttribute('data-pdel');
+            const p = products.find(x => x.id === id);
+            if (!p) return;
+            if (btn.hasAttribute('data-pedit')) {
+                openProductModal(p.id);
+            } else if (btn.hasAttribute('data-pdel')) {
+                deleteContext = { type: 'product', id: p.id, name: p.name };
+                document.getElementById('deleteModalTitle').textContent = 'Supprimer un produit';
+                document.getElementById('deleteTargetName').textContent = p.name;
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
+            }
+        });
+
+        document.getElementById('btnSaveProduct').addEventListener('click', () => {
+            const name = document.getElementById('pfName').value.trim();
+            if (!name) { toast('Le nom du produit est obligatoire.', 'err'); return; }
+            const data = {
+                name,
+                ref: document.getElementById('pfRef').value.trim(),
+                cat: document.getElementById('pfCat').value.trim(),
+                unit: document.getElementById('pfUnit').value,
+                min: Math.max(0, Number(document.getElementById('pfMin').value) || 0),
+                buy: Number(document.getElementById('pfBuy').value) || 0,
+                sell: Number(document.getElementById('pfSell').value) || 0
+            };
+            const pfId = document.getElementById('pfId').value;
+            if (pfId) {
+                const p = products.find(x => x.id === pfId);
+                if (p) { Object.assign(p, data); toast('Produit "' + name + '" modifie avec succes.', 'ok'); }
+            } else {
+                const qty = Math.max(0, Number(document.getElementById('pfInitQty').value) || 0);
+                products.push({ id: uid(), ...data, qty });
+                toast('Produit "' + name + '" ajoute au catalogue.', 'ok');
+            }
+            saveProducts();
+            renderProducts(); renderStats();
+            logActivity(currentAdminName(), pfId ? 'Modification produit' : 'Creation produit', 'Produit ' + name);
+            renderActivity();
+            bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+        });
+
+        /* ============================================================
+           CATEGORIES
+           ============================================================ */
         function loadCategories() {
             try { return JSON.parse(localStorage.getItem(STORE_CATEGORIES)) || []; }
             catch (e) { return []; }
         }
+
         function saveCategories() {
             localStorage.setItem(STORE_CATEGORIES, JSON.stringify(categories));
         }
+
         function seedCategories() {
             let c = loadCategories();
             if (c.length) return c;
             c = [
                 { id: uid(), name: 'Alimentation', desc: 'Produits alimentaires et denrees', count: 4 },
-                { id: uid(), name: 'Hygiene', desc: 'Produits d entretien et d hygiene', count: 1 },
-                { id: uid(), name: 'Fournitures', desc: 'Fournitures de bureau et scolaires', count: 1 }
+                { id: uid(), name: 'Hygiène', desc: "Produits d entretien et d'hygiene", count: 2 },
+                { id: uid(), name: 'Fournitures', desc: 'Fournitures de bureau et scolaires', count: 2 },
+                { id: uid(), name: 'Boissons', desc: 'Boissons et eaux', count: 1 }
             ];
             localStorage.setItem(STORE_CATEGORIES, JSON.stringify(c));
             return c;
         }
+
         let categories = seedCategories();
         let editingCatId = null;
+
+        function countByCat(name) {
+            return products.filter(p => (p.cat || '') === name).length;
+        }
 
         function renderCategories() {
             document.getElementById('categoriesBody').innerHTML = categories.map(c => `
                 <tr>
-                    <td><div class="td-title">${c.name}</div></td>
-                    <td class="td-sub">${c.desc || ''}</td>
-                    <td>${c.count}</td>
+                    <td><div class="td-title">${esc(c.name)}</div></td>
+                    <td class="td-sub">${esc(c.desc || '')}</td>
+                    <td>${countByCat(c.name)}</td>
                     <td>
                         <div class="row-actions">
                             <button class="icon-btn" title="Modifier" data-cedit="${c.id}"><i class="fa-solid fa-pen"></i></button>
@@ -1808,7 +1908,7 @@
             document.getElementById('categoryModalTitle').textContent = 'Nouvelle categorie';
             document.getElementById('categoryForm').reset();
             document.getElementById('cfId').value = '';
-            new bootstrap.Modal(document.getElementById('categoryModal')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('categoryModal')).show();
         });
 
         document.getElementById('categoriesBody').addEventListener('click', e => {
@@ -1823,12 +1923,12 @@
                 document.getElementById('cfId').value = cat.id;
                 document.getElementById('cfName').value = cat.name;
                 document.getElementById('cfDesc').value = cat.desc || '';
-                new bootstrap.Modal(document.getElementById('categoryModal')).show();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('categoryModal')).show();
             } else if (btn.hasAttribute('data-cdel')) {
                 deleteContext = { type: 'category', id: cat.id, name: cat.name };
                 document.getElementById('deleteModalTitle').textContent = 'Supprimer une categorie';
                 document.getElementById('deleteTargetName').textContent = cat.name;
-                new bootstrap.Modal(document.getElementById('deleteModal')).show();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
             }
         });
 
@@ -1846,87 +1946,43 @@
             }
             saveCategories();
             renderCategories();
-            new bootstrap.Modal(document.getElementById('categoryModal')).hide();
+            bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
         });
 
-        /* ---------- Donnees demo : clients, devis, factures, paiements ---------- */
-        const CLIENTS = [
-            { name: 'Boutique Amina', email: 'amina@mail.com', phone: '+229 97 00 00 01', status: 'Actif' },
-            { name: 'Epicerie Yemi', email: 'yemi@mail.com', phone: '+229 97 00 00 02', status: 'Actif' },
-            { name: 'Quincaillerie Kofi', email: 'kofi@mail.com', phone: '+229 97 00 00 03', status: 'Inactif' }
-        ];
+        /* ============================================================
+           SUPPRESSION (utilisateurs, produits, categories)
+           ============================================================ */
+        document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+            if (!deleteContext) return;
+            if (deleteContext.type === 'user') {
+                users = users.filter(u => u.id !== deleteContext.id);
+                saveUsers(users);
+                logActivity(currentAdminName(), 'Suppression utilisateur', 'Compte de ' + deleteContext.name);
+                renderUsers();
+            } else if (deleteContext.type === 'product') {
+                products = products.filter(p => p.id !== deleteContext.id);
+                saveProducts();
+                logActivity(currentAdminName(), 'Suppression produit', 'Produit ' + deleteContext.name);
+                renderProducts(); renderStats();
+            } else if (deleteContext.type === 'category') {
+                categories = categories.filter(c => c.id !== deleteContext.id);
+                saveCategories();
+                renderCategories();
+            }
+            renderActivity();
+            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            toast('Suppression effectuee.', 'ok');
+        });
 
-        const QUOTES = [
-            { num: 'DEV-0001', client: 'Boutique Amina', date: '05/08/2026', amount: 125000, status: 'Valide' },
-            { num: 'DEV-0002', client: 'Epicerie Yemi', date: '06/08/2026', amount: 48000, status: 'En attente' },
-            { num: 'DEV-0003', client: 'Quincaillerie Kofi', date: '08/08/2026', amount: 96000, status: 'En attente' }
-        ];
-
-        const INVOICES = [
-            { num: 'FAC-0054', client: 'Boutique Amina', date: '04/08/2026', amount: 112500, status: 'Payee' },
-            { num: 'FAC-0055', client: 'Epicerie Yemi', date: '07/08/2026', amount: 48000, status: 'Impayee' },
-            { num: 'FAC-0056', client: 'Boutique Amina', date: '10/08/2026', amount: 64000, status: 'Payee' }
-        ];
-
-        const PAYMENTS = [
-            { ref: 'PAY-0180', client: 'Boutique Amina', doc: 'FAC-0054', amount: 112500, date: '04/08/2026', method: 'Mobile Money', status: 'Recu' },
-            { ref: 'PAY-0181', client: 'Boutique Amina', doc: 'FAC-0056', amount: 64000, date: '10/08/2026', method: 'Especes', status: 'Recu' },
-            { ref: 'PAY-0182', client: 'Epicerie Yemi', doc: 'FAC-0055', amount: 48000, date: '12/08/2026', method: 'Especes', status: 'En attente' }
-        ];
-
-        function renderClients() {
-            const q = clientSearch.toLowerCase();
-            document.getElementById('clientsBody').innerHTML = CLIENTS.filter(c => !q || c.name.toLowerCase().includes(q)).map(c => `
-                <tr>
-                    <td><div class="td-title">${c.name}</div></td>
-                    <td>${c.email}</td>
-                    <td>${c.phone}</td>
-                    <td><span class="badge-st ${c.status === 'Actif' ? 'bs-ok' : 'bs-bad'}">${c.status}</span></td>
-                </tr>`).join('');
-        }
-        let clientSearch = '';
-        document.getElementById('clientSearch').addEventListener('input', e => { clientSearch = e.target.value; renderClients(); });
-
-        function renderQuotes() {
-            document.getElementById('quotesBody').innerHTML = QUOTES.map(d => `
-                <tr>
-                    <td><span class="td-title">${d.num}</span></td>
-                    <td>${d.client}</td>
-                    <td>${d.date}</td>
-                    <td>${fmtMoney(d.amount)}</td>
-                    <td><span class="badge-st ${d.status === 'Valide' ? 'bs-ok' : 'bs-warn'}">${d.status}</span></td>
-                </tr>`).join('');
-        }
-
-        function renderInvoices() {
-            document.getElementById('invoicesBody').innerHTML = INVOICES.map(d => `
-                <tr>
-                    <td><span class="td-title">${d.num}</span></td>
-                    <td>${d.client}</td>
-                    <td>${d.date}</td>
-                    <td>${fmtMoney(d.amount)}</td>
-                    <td><span class="badge-st ${d.status === 'Payee' ? 'bs-ok' : 'bs-bad'}">${d.status}</span></td>
-                </tr>`).join('');
-        }
-
-        let paymentSearch = '';
-        function renderPayments() {
-            const q = paymentSearch.toLowerCase();
-            document.getElementById('paymentsBody').innerHTML = PAYMENTS.filter(p => !q || p.ref.toLowerCase().includes(q) || p.client.toLowerCase().includes(q)).map(p => `
-                <tr>
-                    <td><span class="td-title">${p.ref}</span></td>
-                    <td>${p.client}</td>
-                    <td>${p.doc}</td>
-                    <td>${fmtMoney(p.amount)}</td>
-                    <td>${p.date}</td>
-                    <td>${p.method}</td>
-                    <td><span class="badge-st ${p.status === 'Recu' ? 'bs-ok' : 'bs-warn'}">${p.status}</span></td>
-                </tr>`).join('');
-        }
-        document.getElementById('paymentSearch').addEventListener('input', e => { paymentSearch = e.target.value; renderPayments(); });
-
-        /* ---------- Statistiques ---------- */
+        /* ============================================================
+           STATISTIQUES
+           ============================================================ */
         function renderStats() {
+            document.getElementById('stProducts').textContent = products.length;
+            document.getElementById('stQty').textContent = products.reduce((s, p) => s + Number(p.qty || 0), 0);
+            document.getElementById('stValue').textContent = fmtMoney(products.reduce((s, p) => s + Number(p.qty || 0) * Number(p.buy || 0), 0));
+            document.getElementById('stAlert').textContent = products.filter(p => Number(p.qty || 0) <= 0 || Number(p.qty || 0) < p.min).length;
+
             const months = [
                 { m: 'Mars', v: 58 }, { m: 'Avril', v: 66 }, { m: 'Mai', v: 72 },
                 { m: 'Juin', v: 64 }, { m: 'Juillet', v: 80 }, { m: 'Aout', v: 88 }
@@ -1939,21 +1995,71 @@
                 <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${x.v}%;"></div></div>`).join('');
         }
 
-        /* ---------- Boutons demo (devis / factures) ---------- */
-        document.getElementById('btnAddQuote').addEventListener('click', () => toast('Creation de devis bientot disponible (page de demonstration).'));
-        document.getElementById('btnAddInvoice').addEventListener('click', () => toast('Creation de facture bientot disponible (page de demonstration).'));
+        /* ============================================================
+           PARAMETRES (profil & mot de passe)
+           ============================================================ */
+        const DEFAULT_PROFILE = { name: 'Administrateur', email: 'admin@emarket.com', role: 'Administrateur', password: DEFAULT_PWD };
+        let profile = null;
+
+        function loadProfile() {
+            try { profile = JSON.parse(localStorage.getItem(STORE_PROFILE)) || null; }
+            catch (e) { profile = null; }
+            if (!profile || !profile.name) {
+                profile = Object.assign({}, DEFAULT_PROFILE);
+                saveProfile();
+            }
+        }
+
+        function saveProfile() {
+            localStorage.setItem(STORE_PROFILE, JSON.stringify(profile));
+        }
+
+        function renderSettings() {
+            document.getElementById('setName').value = profile.name;
+            document.getElementById('setEmail').value = profile.email;
+            document.getElementById('setRole').value = profile.role;
+            document.getElementById('chipUserName').textContent = profile.name;
+            document.getElementById('chipUserRole').textContent = profile.role === 'Administrateur' ? "Responsable de l'entreprise" : profile.role;
+        }
+
+        document.getElementById('btnSaveProfile').addEventListener('click', () => {
+            const name = document.getElementById('setName').value.trim();
+            const email = document.getElementById('setEmail').value.trim();
+            if (!name) { toast('Le nom complet est obligatoire.', 'err'); return; }
+            if (!email) { toast("L'email est obligatoire.", 'err'); return; }
+            profile.name = name;
+            profile.email = email;
+            saveProfile();
+            renderSettings();
+            toast('Profil mis a jour avec succes.', 'ok');
+        });
+
+        document.getElementById('btnChangePwd').addEventListener('click', () => {
+            const cur = document.getElementById('setCurrentPwd').value;
+            const np = document.getElementById('setNewPwd').value;
+            const cp = document.getElementById('setConfirmPwd').value;
+            if (!cur) { toast('Saisissez votre mot de passe actuel.', 'err'); return; }
+            if (cur !== profile.password) { toast('Le mot de passe actuel est incorrect.', 'err'); return; }
+            if (!np || np.length < 4) { toast('Le nouveau mot de passe doit contenir au moins 4 caracteres.', 'err'); return; }
+            if (np !== cp) { toast('Les deux nouveaux mots de passe ne correspondent pas.', 'err'); return; }
+            if (np === profile.password) { toast('Le nouveau mot de passe est identique a l actuel.', 'err'); return; }
+            profile.password = np;
+            saveProfile();
+            document.getElementById('setCurrentPwd').value = '';
+            document.getElementById('setNewPwd').value = '';
+            document.getElementById('setConfirmPwd').value = '';
+            toast('Mot de passe mis a jour avec succes.', 'ok');
+        });
 
         /* ---------- Init ---------- */
+        loadProfile();
         renderUsers();
         renderProducts();
         renderCategories();
-        renderClients();
-        renderQuotes();
-        renderInvoices();
-        renderPayments();
         renderStats();
         renderActivity();
+        renderSettings();
     </script>
-</body>
 
+</body>
 </html>

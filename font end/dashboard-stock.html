@@ -226,6 +226,12 @@
             color: var(--accent);
         }
 
+        .sidebar-nav .nav-sep {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.14);
+            margin: 12px 10px;
+        }
+
         .sidebar-locked {
             margin: 0 14px 14px;
             padding: 12px 14px;
@@ -886,6 +892,8 @@
                 <li data-view="history"><a href="dashboard-stock.html/history" data-goto="history"><i class="fa-solid fa-clock-rotate-left"></i> Historique</a></li>
                 <li data-view="lowstock"><a href="dashboard-stock.html/lowstock" data-goto="lowstock"><i class="fa-solid fa-triangle-exclamation"></i> Stock faible</a></li>
                 <li data-view="outofstock"><a href="dashboard-stock.html/outofstock" data-goto="outofstock"><i class="fa-solid fa-circle-xmark"></i> Rupture de stock</a></li>
+                <li class="nav-sep"></li>
+                <li data-view="settings"><a href="dashboard-stock.html/settings" data-goto="settings"><i class="fa-solid fa-user-gear"></i> Parametres</a></li>
             </ul>
 
             <div class="sidebar-footer">
@@ -909,10 +917,10 @@
                 </div>
                 <div class="topbar-right">
                     <div class="user-chip">
-                        <div class="avatar">PS</div>
+                        <div class="avatar">GS</div>
                         <div class="u-info">
-                            <div class="u-name">Gestionnaire Stock</div>
-                            <div class="u-role">Module stock</div>
+                            <div class="u-name" id="chipUserName">Gestionnaire Stock</div>
+                            <div class="u-role">Gérant de stock</div>
                         </div>
                     </div>
                     <a href="index.html" class="btn_one" title="Retour a l'accueil"><i class="fa-solid fa-house"></i><span class="d-none d-md-inline">Site</span></a>
@@ -1192,6 +1200,56 @@
                 </div>
             </section>
 
+            <!-- ===== PARAMETRES ===== -->
+            <section id="view-settings" class="view" style="display:none;">
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <div class="card-dash">
+                            <div class="card-head">
+                                <h3>Mon profil</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label" for="setName">Nom complet *</label>
+                                    <input type="text" class="form-control" id="setName" placeholder="Votre nom complet">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="setEmail">Email *</label>
+                                    <input type="email" class="form-control" id="setEmail" placeholder="Votre email">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="setRole">Role</label>
+                                    <input type="text" class="form-control" id="setRole" disabled>
+                                </div>
+                                <button class="btn_one" id="btnSaveProfile"><i class="fa-solid fa-check"></i> Enregistrer le profil</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card-dash">
+                            <div class="card-head">
+                                <h3>Changer le mot de passe</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label" for="setCurrentPwd">Mot de passe actuel *</label>
+                                    <input type="password" class="form-control" id="setCurrentPwd" autocomplete="off" placeholder="Votre mot de passe actuel">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="setNewPwd">Nouveau mot de passe *</label>
+                                    <input type="password" class="form-control" id="setNewPwd" autocomplete="new-password" placeholder="Au moins 4 caracteres">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="setConfirmPwd">Confirmer le nouveau mot de passe *</label>
+                                    <input type="password" class="form-control" id="setConfirmPwd" autocomplete="new-password" placeholder="Repetez le nouveau mot de passe">
+                                </div>
+                                <button class="btn_one" id="btnChangePwd"><i class="fa-solid fa-lock"></i> Mettre a jour le mot de passe</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -1288,6 +1346,8 @@
 
         const STORE_PRODUCTS = 'emarket_stock_products';
         const STORE_MOVES = 'emarket_stock_moves';
+        const STORE_PROFILE = 'emarket_stock_profile';
+        const DEFAULT_PROFILE = { name: 'Gérant de stock', email: 'gerant@emarket.com', role: 'Gérant de stock', password: '123456' };
 
         const PAGES = {
             overview: { title: "Vue d'ensemble" },
@@ -1296,7 +1356,8 @@
             exits: { title: 'Sorties de stock' },
             history: { title: 'Historique du stock' },
             lowstock: { title: 'Produits en stock faible' },
-            outofstock: { title: 'Produits en rupture' }
+            outofstock: { title: 'Produits en rupture' },
+            settings: { title: 'Parametres' }
         };
 
         let products = [];
@@ -1323,6 +1384,21 @@
 
         function saveMoves() {
             localStorage.setItem(STORE_MOVES, JSON.stringify(moves));
+        }
+
+        let profile = null;
+
+        function loadProfile() {
+            try { profile = JSON.parse(localStorage.getItem(STORE_PROFILE)) || null; }
+            catch (e) { profile = null; }
+            if (!profile || !profile.name) {
+                profile = Object.assign({}, DEFAULT_PROFILE);
+                saveProfile();
+            }
+        }
+
+        function saveProfile() {
+            localStorage.setItem(STORE_PROFILE, JSON.stringify(profile));
         }
 
         function seedData() {
@@ -1586,6 +1662,14 @@
             renderLow();
             renderOut();
             fillCatList();
+            renderSettings();
+        }
+
+        function renderSettings() {
+            document.getElementById('setName').value = profile.name;
+            document.getElementById('setEmail').value = profile.email;
+            document.getElementById('setRole').value = profile.role;
+            document.getElementById('chipUserName').textContent = profile.name;
         }
 
         function esc(s) {
@@ -1811,6 +1895,36 @@
         document.getElementById('entryForm').addEventListener('submit', e => { e.preventDefault(); doMove('in'); });
         document.getElementById('exitForm').addEventListener('submit', e => { e.preventDefault(); doMove('out'); });
 
+        /* ---------- Parametres (profil & mot de passe) ---------- */
+        document.getElementById('btnSaveProfile').addEventListener('click', () => {
+            const name = document.getElementById('setName').value.trim();
+            const email = document.getElementById('setEmail').value.trim();
+            if (!name) { toast('Le nom complet est obligatoire.', 'err'); return; }
+            if (!email) { toast("L'email est obligatoire.", 'err'); return; }
+            profile.name = name;
+            profile.email = email;
+            saveProfile();
+            renderSettings();
+            toast('Profil mis a jour avec succes.', 'ok');
+        });
+
+        document.getElementById('btnChangePwd').addEventListener('click', () => {
+            const cur = document.getElementById('setCurrentPwd').value;
+            const np = document.getElementById('setNewPwd').value;
+            const cp = document.getElementById('setConfirmPwd').value;
+            if (!cur) { toast('Saisissez votre mot de passe actuel.', 'err'); return; }
+            if (cur !== profile.password) { toast('Le mot de passe actuel est incorrect.', 'err'); return; }
+            if (!np || np.length < 4) { toast('Le nouveau mot de passe doit contenir au moins 4 caracteres.', 'err'); return; }
+            if (np !== cp) { toast('Les deux nouveaux mots de passe ne correspondent pas.', 'err'); return; }
+            if (np === profile.password) { toast('Le nouveau mot de passe est identique a l actuel.', 'err'); return; }
+            profile.password = np;
+            saveProfile();
+            document.getElementById('setCurrentPwd').value = '';
+            document.getElementById('setNewPwd').value = '';
+            document.getElementById('setConfirmPwd').value = '';
+            toast('Mot de passe mis a jour avec succes.', 'ok');
+        });
+
         /* ---------- Toasts ---------- */
         function toast(msg, kind) {
             const holder = document.getElementById('toastHolder');
@@ -1829,6 +1943,7 @@
         /* ---------- Init ---------- */
         loadProducts();
         loadMoves();
+        loadProfile();
         seedData();
         showView(getSectionFromUrl());
     </script>
