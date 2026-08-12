@@ -1091,7 +1091,7 @@
                 <div class="card-dash">
                     <div class="card-head">
                         <h3>Sorties de stock</h3>
-                        <p class="mb-0" style="color:#8a8fb8;font-size:13.5px;">Enregistrez une vente, une perte ou une utilisation interne.</p>
+                        <p class="mb-0" style="color:#8a8fb8;font-size:13.5px;">Enregistrez une sortie (vente, perte, utilisation). Elle est validee immediatement et devient facturable chez le caissier.</p>
                     </div>
                     <div class="card-body">
                         <form class="move-form out" id="exitForm">
@@ -1114,7 +1114,7 @@
                         <div class="table-wrap">
                             <table class="table table-dash">
                                 <thead>
-                                    <tr><th>Date</th><th>Produit</th><th>Quantite</th><th>Motif</th></tr>
+                                    <tr><th>Date</th><th>Produit</th><th>Quantite</th><th>Motif</th><th>Statut</th><th>Dispo caissier</th></tr>
                                 </thead>
                                 <tbody id="exitsBody"></tbody>
                             </table>
@@ -1347,6 +1347,7 @@
         const STORE_PRODUCTS = 'emarket_stock_products';
         const STORE_MOVES = 'emarket_stock_moves';
         const STORE_PROFILE = 'emarket_stock_profile';
+        const STORE_VALIDATED_EXITS = 'emarket_caissier_sorties_validees';
         const DEFAULT_PROFILE = { name: 'Gérant de stock', email: 'gerant@emarket.com', role: 'Gérant de stock', password: '123456' };
 
         const PAGES = {
@@ -1362,6 +1363,7 @@
 
         let products = [];
         let moves = [];
+        let validatedExits = [];
         let currentFilter = 'all';
         let currentSearch = '';
         let deleteId = null;
@@ -1384,6 +1386,22 @@
 
         function saveMoves() {
             localStorage.setItem(STORE_MOVES, JSON.stringify(moves));
+        }
+
+        function loadValidatedExits() {
+            try { validatedExits = JSON.parse(localStorage.getItem(STORE_VALIDATED_EXITS)) || []; }
+            catch (e) { validatedExits = []; }
+            return validatedExits;
+        }
+
+        function saveValidatedExits() {
+            localStorage.setItem(STORE_VALIDATED_EXITS, JSON.stringify(validatedExits));
+        }
+
+        function remainingExitQty(productId) {
+            return validatedExits
+                .filter(e => e.productId === productId)
+                .reduce((s, e) => s + (Number(e.qty || 0) - Number(e.used || 0)), 0);
         }
 
         let profile = null;
@@ -1428,6 +1446,14 @@
             ];
             moves = seedMoves;
             saveMoves();
+
+            if (!loadValidatedExits().length) {
+                const outMove = seedMoves[seedMoves.length - 1];
+                validatedExits = [
+                    { id: uid(), moveId: outMove.id, productId: products[2].id, qty: outMove.qty, reason: outMove.reason, date: outMove.date, used: 0 }
+                ];
+                saveValidatedExits();
+            }
         }
 
         function uid() {
@@ -1614,9 +1640,13 @@
             oe.innerHTML = outList.map(m => {
                 const p = findProduct(m.productId);
                 if (!p) return '';
+                const ex = validatedExits.find(e => e.moveId === m.id);
+                const rem = ex ? Math.max(0, Number(ex.qty || 0) - Number(ex.used || 0)) : 0;
                 return '<tr><td class="td-sub">' + fmtDate(m.date) + '</td><td class="td-title">' + esc(p.name) + '</td>' +
-                    '<td><span class="qty-pill">-' + m.qty + '</span></td><td>' + esc(m.reason || '—') + '</td></tr>';
-            }).join('') || '<tr><td colspan="4" class="text-center text-muted py-4">Aucune sortie enregistree.</td></tr>';
+                    '<td><span class="qty-pill">-' + m.qty + '</span></td><td>' + esc(m.reason || '—') + '</td>' +
+                    '<td><span class="badge-move bm-in">Validee</span></td>' +
+                    '<td><span class="qty-pill">' + rem + '</span></td></tr>';
+            }).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Aucune sortie enregistree.</td></tr>';
         }
 
         function renderLow() {
@@ -1882,13 +1912,19 @@
             p.qty = newQty;
             saveProducts();
 
-            moves.push({ id: uid(), date: Date.now(), productId: p.id, type, qty, reason, balance: newQty });
+            const move = { id: uid(), date: Date.now(), productId: p.id, type, qty, reason, balance: newQty };
+            moves.push(move);
             saveMoves();
+
+            if (type === 'out') {
+                validatedExits.push({ id: uid(), moveId: move.id, productId: p.id, qty, reason, date: move.date, used: 0 });
+                saveValidatedExits();
+            }
 
             document.getElementById(type === 'in' ? 'entryReason' : 'exitReason').value = '';
             document.getElementById(type === 'in' ? 'entryQty' : 'exitQty').value = 1;
 
-            toast((type === 'in' ? 'Entree' : 'Sortie') + ' enregistree : +' + (type === 'in' ? '' : '-') + qty + ' ' + (p.unit || 'unite') + ' pour "' + p.name + '".', 'ok');
+            toast((type === 'in' ? 'Entree' : 'Sortie validee') + ' enregistree : +' + (type === 'in' ? '' : '-') + qty + ' ' + (p.unit || 'unite') + ' pour "' + p.name + '".' + (type === 'out' ? ' La sortie est facturable chez le caissier.' : ''), 'ok');
             renderAll();
         }
 
@@ -1943,6 +1979,7 @@
         /* ---------- Init ---------- */
         loadProducts();
         loadMoves();
+        loadValidatedExits();
         loadProfile();
         seedData();
         showView(getSectionFromUrl());
