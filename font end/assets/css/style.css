@@ -31,6 +31,8 @@ Version      : 1.0
 * ----------------------------------------------------------------------------------------
 */
 body {
+	margin: 0;
+	padding: 0;
 	color: #4a5355;
 	font-family: "DM Sans", sans-serif;
 	font-size: 16px;
@@ -42,6 +44,11 @@ body {
 
 html,
 body { height: 100%;position:relative;  }
+
+#home, .home_bg {
+	margin-top: 0;
+	padding-top: 0;
+}
 h1,
 h2,
 h3,
@@ -258,7 +265,8 @@ margin-top: 0px;
 	max-width: 100%;
 }
 #navigation{
-	padding: 20px 65px;
+	padding: 20px 65px 0;
+	margin-bottom: 0;
 	border-bottom: 1px solid #ddd;
 }
 .navigation2{
@@ -478,17 +486,17 @@ top: 40px;
 	font-weight: 700;
 	letter-spacing: 0;
 	line-height: 74px;
-	padding-top: 250px;
+	padding-top: 100px;
 	margin-bottom: 20px;
 }
 @media only screen and (max-width:960px){
-.hero-text h1 {padding-top:150px;font-size:64px;line-height:74px;}
+.hero-text h1 {padding-top:100px;font-size:64px;line-height:74px;}
 }
 @media only screen and (max-width:768px){
-.hero-text h1 {padding-top:150px;font-size: 64px;line-height: 74px;}
+.hero-text h1 {padding-top:90px;font-size: 64px;line-height: 74px;}
 }
 @media only screen and (max-width:480px){
-.hero-text h1 {padding-top:150px;font-size: 34px;line-height:44px;}
+.hero-text h1 {padding-top:80px;font-size: 34px;line-height:44px;}
 }
 .hero-text p {
 	width:80%;
@@ -544,7 +552,8 @@ border: 1px solid #525fe1!important;
 /*END SUBSCRIBE FIELD*/
 .hero-text-img {
 	position: absolute;
-	bottom: 0;
+	top: 120px;
+	bottom: auto;
 	right:5%;
 }
 .hero-text-img img{position:relative;}
