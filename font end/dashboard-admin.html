@@ -1501,6 +1501,10 @@
             return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
+        function sortByCreatedAtDesc(list) {
+            return list.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        }
+
         /* ============================================================
            UTILISATEURS
            ============================================================ */
@@ -1516,10 +1520,11 @@
         function seedUsers() {
             let u = loadUsers();
             if (u.length) return u;
+            const now = Date.now();
             u = [
-                { id: uid(), name: 'Administrateur', email: 'admin@emarket.com', role: 'Administrateur', active: true, password: DEFAULT_PWD },
-                { id: uid(), name: 'Gérant de stock', email: 'gerant@emarket.com', role: 'Gérant de stock', active: true, password: DEFAULT_PWD },
-                { id: uid(), name: 'Caissier', email: 'caissier@emarket.com', role: 'Caissier', active: true, password: DEFAULT_PWD }
+                { id: uid(), name: 'Administrateur', email: 'admin@emarket.com', role: 'Administrateur', active: true, password: DEFAULT_PWD, createdAt: now - 3 },
+                { id: uid(), name: 'Gérant de stock', email: 'gerant@emarket.com', role: 'Gérant de stock', active: true, password: DEFAULT_PWD, createdAt: now - 2 },
+                { id: uid(), name: 'Caissier', email: 'caissier@emarket.com', role: 'Caissier', active: true, password: DEFAULT_PWD, createdAt: now - 1 }
             ];
             saveUsers(u);
             return u;
@@ -1543,7 +1548,7 @@
 
         function renderUsers() {
             const q = userSearch.toLowerCase();
-            const list = users.filter(u => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q));
+            const list = sortByCreatedAtDesc(users.filter(u => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q)));
             document.getElementById('usersBody').innerHTML = list.map(u => `
                 <tr>
                     <td><div class="td-title">${esc(u.name)}</div><div class="td-sub">${esc(u.email)}</div></td>
@@ -1593,7 +1598,7 @@
 
         let activitySearch = '';
         function renderActivity() {
-            const rows = activityRows().filter(r => {
+            const rows = activityRows().slice().sort((a, b) => b.date - a.date).filter(r => {
                 const q = activitySearch.toLowerCase();
                 return !q || r.user.toLowerCase().includes(q) || r.action.toLowerCase().includes(q) || (r.detail || '').toLowerCase().includes(q);
             });
@@ -1682,7 +1687,7 @@
                 const useDefault = document.getElementById('ufDefaultPwd').checked;
                 const password = useDefault ? DEFAULT_PWD : document.getElementById('ufPassword').value.trim();
                 if (!password) { toast('Veuillez saisir un mot de passe.', 'err'); return; }
-                users.push({ id: uid(), name, email, role, active: true, password });
+                users.push({ id: uid(), name, email, role, active: true, password, createdAt: Date.now() });
                 logActivity(currentAdminName(), 'Creation utilisateur', 'Compte de ' + name);
                 toast('Utilisateur cree avec succes.', 'ok');
             }
@@ -1741,7 +1746,7 @@
                 { name: 'Stylo bleu', ref: 'REF-009', cat: 'Fournitures', unit: 'unite', min: 30, buy: 100, sell: 200, qty: 80 },
                 { name: 'Detergent 1L', ref: 'REF-010', cat: 'Hygiène', unit: 'litre', min: 10, buy: 1100, sell: 1500, qty: 6 }
             ];
-            products = p.map(x => ({ id: uid(), ...x }));
+            products = p.map((x, i) => ({ id: uid(), ...x, createdAt: Date.now() - (p.length - i) }));
             saveProducts();
             return products;
         }
@@ -1757,7 +1762,7 @@
 
         function renderProducts() {
             const q = productSearch.toLowerCase();
-            const list = products.filter(p => !q || p.name.toLowerCase().includes(q) || (p.ref || '').toLowerCase().includes(q) || (p.cat || '').toLowerCase().includes(q));
+            const list = sortByCreatedAtDesc(products.filter(p => !q || p.name.toLowerCase().includes(q) || (p.ref || '').toLowerCase().includes(q) || (p.cat || '').toLowerCase().includes(q)));
             document.getElementById('productsBody').innerHTML = list.map(p => {
                 const st = getStatus(p);
                 return `<tr>
@@ -1846,7 +1851,7 @@
                 if (p) { Object.assign(p, data); toast('Produit "' + name + '" modifie avec succes.', 'ok'); }
             } else {
                 const qty = Math.max(0, Number(document.getElementById('pfInitQty').value) || 0);
-                products.push({ id: uid(), ...data, qty });
+                products.push({ id: uid(), ...data, qty, createdAt: Date.now() });
                 toast('Produit "' + name + '" ajoute au catalogue.', 'ok');
             }
             saveProducts();
@@ -1871,11 +1876,12 @@
         function seedCategories() {
             let c = loadCategories();
             if (c.length) return c;
+            const now = Date.now();
             c = [
-                { id: uid(), name: 'Alimentation', desc: 'Produits alimentaires et denrees', count: 4 },
-                { id: uid(), name: 'Hygiène', desc: "Produits d entretien et d'hygiene", count: 2 },
-                { id: uid(), name: 'Fournitures', desc: 'Fournitures de bureau et scolaires', count: 2 },
-                { id: uid(), name: 'Boissons', desc: 'Boissons et eaux', count: 1 }
+                { id: uid(), name: 'Alimentation', desc: 'Produits alimentaires et denrees', count: 4, createdAt: now - 4 },
+                { id: uid(), name: 'Hygiène', desc: "Produits d entretien et d'hygiene", count: 2, createdAt: now - 3 },
+                { id: uid(), name: 'Fournitures', desc: 'Fournitures de bureau et scolaires', count: 2, createdAt: now - 2 },
+                { id: uid(), name: 'Boissons', desc: 'Boissons et eaux', count: 1, createdAt: now - 1 }
             ];
             localStorage.setItem(STORE_CATEGORIES, JSON.stringify(c));
             return c;
@@ -1889,7 +1895,7 @@
         }
 
         function renderCategories() {
-            document.getElementById('categoriesBody').innerHTML = categories.map(c => `
+            document.getElementById('categoriesBody').innerHTML = sortByCreatedAtDesc(categories).map(c => `
                 <tr>
                     <td><div class="td-title">${esc(c.name)}</div></td>
                     <td class="td-sub">${esc(c.desc || '')}</td>
@@ -1941,7 +1947,7 @@
                 c.name = name; c.desc = desc;
                 toast('Categorie modifiee avec succes.', 'ok');
             } else {
-                categories.push({ id: uid(), name, desc, count: 0 });
+                categories.push({ id: uid(), name, desc, count: 0, createdAt: Date.now() });
                 toast('Categorie creee avec succes.', 'ok');
             }
             saveCategories();

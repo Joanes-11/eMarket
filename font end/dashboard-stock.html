@@ -1434,7 +1434,7 @@
                 { name: 'Stylo bleu', ref: 'REF-009', cat: 'Fournitures', unit: 'unite', min: 30, buy: 100, sell: 200, qty: 80 },
                 { name: 'Detergent 1L', ref: 'REF-010', cat: 'Hygiène', unit: 'litre', min: 10, buy: 1100, sell: 1500, qty: 6 }
             ];
-            products = seed.map(p => ({ id: uid(), ...p }));
+            products = seed.map((p, i) => ({ id: uid(), ...p, createdAt: now - (seed.length - i) }));
             saveProducts();
 
             const seedMoves = [
@@ -1506,7 +1506,7 @@
             }
 
             /* Tableau produits a surveiller (faible + rupture) */
-            const watch = products.filter(p => p.qty <= 0 || p.qty < p.min);
+            const watch = sortByCreatedAtDesc(products.filter(p => p.qty <= 0 || p.qty < p.min));
             const tbody = document.querySelector('#watchTable tbody');
             if (!watch.length) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Aucun produit a surveiller.</td></tr>';
@@ -1553,7 +1553,7 @@
                     (p.cat || '').toLowerCase().includes(q)
                 );
             }
-            return list;
+            return sortByCreatedAtDesc(list);
         }
 
         function renderProducts() {
@@ -1588,7 +1588,7 @@
         function renderMoveSelects() {
             const entrySel = document.getElementById('entryProduct');
             const exitSel = document.getElementById('exitProduct');
-            const opts = products.map(p =>
+            const opts = sortByCreatedAtDesc(products).map(p =>
                 '<option value="' + p.id + '">' + esc(p.name) + ' (dispo : ' + p.qty + ' ' + esc(p.unit || 'unite') + ')</option>'
             ).join('');
             entrySel.innerHTML = opts;
@@ -1650,7 +1650,7 @@
         }
 
         function renderLow() {
-            const low = products.filter(p => p.qty > 0 && p.qty < p.min);
+            const low = sortByCreatedAtDesc(products.filter(p => p.qty > 0 && p.qty < p.min));
             const tbody = document.getElementById('lowBody');
             document.getElementById('lowEmpty').style.display = low.length ? 'none' : 'block';
             tbody.innerHTML = low.map(p => {
@@ -1668,7 +1668,7 @@
         }
 
         function renderOut() {
-            const out = products.filter(p => p.qty <= 0);
+            const out = sortByCreatedAtDesc(products.filter(p => p.qty <= 0));
             const tbody = document.getElementById('outBody');
             document.getElementById('outEmpty').style.display = out.length ? 'none' : 'block';
             tbody.innerHTML = out.map(p => {
@@ -1704,6 +1704,10 @@
 
         function esc(s) {
             return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function sortByCreatedAtDesc(list) {
+            return list.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         }
 
         function fillCatList() {
@@ -1837,7 +1841,7 @@
                 toast('Produit "' + name + '" modifie avec succes.', 'ok');
             } else {
                 const qty = Math.max(0, Number(document.getElementById('pfInitQty').value) || 0);
-                const p = { id: uid(), ...data, qty };
+                const p = { id: uid(), ...data, qty, createdAt: Date.now() };
                 products.push(p);
                 saveProducts();
                 if (qty > 0) {

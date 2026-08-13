@@ -1068,6 +1068,7 @@
                 <li class="active" data-view="overview"><a href="dashboard-caissier.html/overview" data-goto="overview"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble</a></li>
                 <li data-view="ventes"><a href="dashboard-caissier.html/ventes" data-goto="ventes"><i class="fa-solid fa-cart-shopping"></i> Ventes</a></li>
                 <li data-view="paiements"><a href="dashboard-caissier.html/paiements" data-goto="paiements"><i class="fa-solid fa-money-bill-wave"></i> Paiements</a></li>
+                <li data-view="rapports"><a href="dashboard-caissier.html/rapports" data-goto="rapports"><i class="fa-solid fa-chart-column"></i> Rapports</a></li>
                 <li class="nav-label">Documents</li>
                 <li data-view="devis"><a href="dashboard-caissier.html/devis" data-goto="devis"><i class="fa-solid fa-file-lines"></i> Devis</a></li>
                 <li data-view="factures"><a href="dashboard-caissier.html/factures" data-goto="factures"><i class="fa-solid fa-file-invoice"></i> Factures</a></li>
@@ -1206,7 +1207,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <p style="color:#8a8fb8;font-size:13px;margin-bottom:12px;"><i class="fa-solid fa-circle-info"></i> Seuls les produits dont une sortie a ete validee par le gerant de stock sont proposables dans un devis.</p>
+                        <p style="color:#8a8fb8;font-size:13px;margin-bottom:12px;"><i class="fa-solid fa-circle-info"></i> Le devis est etabli avant la vente : tous les produits du catalogue sont proposables. La facture est creee apres la vente, a partir des sorties validees par le gerant de stock.</p>
                         <div class="table-wrap">
                             <table class="table table-dash">
                                 <thead>
@@ -1280,8 +1281,8 @@
                     <div class="card-body">
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label" for="saleClient">Client</label>
-                                <select id="saleClient" class="form-select"></select>
+                                <label class="form-label" for="saleClient">Client *</label>
+                                <input type="text" class="form-control" id="saleClient" placeholder="Saisissez le nom du client">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="saleMethod">Mode de paiement</label>
@@ -1352,6 +1353,31 @@
 
                 <div class="card-dash">
                     <div class="card-head">
+                        <h3>Session de paiement — Sorties validees par le gerant</h3>
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="exitPaymentSearch" placeholder="Rechercher une sortie (produit, motif)...">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p style="color:#8a8fb8;font-size:13px;margin-bottom:12px;"><i class="fa-solid fa-circle-info"></i> Sorties de stock validees par le gerant, pas encore facturees. Cliquez sur "Facturer" pour les enregistrer dans une facture : elles seront retrouvees par la recherche.</p>
+                        <div class="table-wrap">
+                            <table class="table table-dash">
+                                <thead>
+                                    <tr><th>Date</th><th>Produit</th><th>Quantite</th><th>Reste a facturer</th><th>Motif</th><th style="text-align:right;">Action</th></tr>
+                                </thead>
+                                <tbody id="exitPaymentsBody"></tbody>
+                            </table>
+                            <div class="empty-state" id="exitPaymentsEmpty" style="display:none;">
+                                <i class="fa-solid fa-arrow-up-wide-short"></i>
+                                <p>Aucune sortie validee a facturer pour le moment.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-dash">
+                    <div class="card-head">
                         <h3>Historique des paiements</h3>
                         <div class="search-box">
                             <i class="fa-solid fa-magnifying-glass"></i>
@@ -1369,6 +1395,68 @@
                             <div class="empty-state" id="paymentsEmpty" style="display:none;">
                                 <i class="fa-solid fa-money-bill-wave"></i>
                                 <p>Aucun paiement enregistre.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== RAPPORTS (POINT DE VENTES) ===== -->
+            <section id="view-rapports" class="view" style="display:none;">
+                <div class="card-dash">
+                    <div class="card-head">
+                        <h3>Point de ventes par jour</h3>
+                        <div class="toolbar">
+                            <input type="date" id="repDay" class="form-control" style="width:auto;">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-grid" id="repDayStats" style="margin-bottom:14px;"></div>
+                        <p class="mb-2" style="color:#8a8fb8;font-size:13px;"><b style="color:var(--text);">Encaissements par mode :</b> <span id="repDayMethods"></span></p>
+                        <div class="table-wrap">
+                            <table class="table table-dash">
+                                <thead>
+                                    <tr><th>Facture</th><th>Client</th><th>Mode</th><th>Montant</th><th>Statut</th></tr>
+                                </thead>
+                                <tbody id="repDayBody"></tbody>
+                            </table>
+                            <div class="empty-state" id="repDayEmpty" style="display:none;">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                <p>Aucune vente enregistree ce jour.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-dash">
+                    <div class="card-head">
+                        <h3>Point de ventes par mois</h3>
+                        <div class="toolbar">
+                            <input type="month" id="repMonth" class="form-control" style="width:auto;">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-grid" id="repMonthStats" style="margin-bottom:14px;"></div>
+                        <h5 class="mb-2">Recapitulatif par jour</h5>
+                        <div class="table-wrap mb-3">
+                            <table class="table table-dash">
+                                <thead>
+                                    <tr><th>Jour</th><th>Nombre de ventes</th><th>Total</th></tr>
+                                </thead>
+                                <tbody id="repMonthDaily"></tbody>
+                            </table>
+                        </div>
+                        <h5 class="mb-2">Detail des ventes du mois</h5>
+                        <div class="table-wrap">
+                            <table class="table table-dash">
+                                <thead>
+                                    <tr><th>Facture</th><th>Date</th><th>Client</th><th>Mode</th><th>Montant</th><th>Statut</th></tr>
+                                </thead>
+                                <tbody id="repMonthBody"></tbody>
+                            </table>
+                            <div class="empty-state" id="repMonthEmpty" style="display:none;">
+                                <i class="fa-solid fa-file-invoice"></i>
+                                <p>Aucune vente enregistree ce mois.</p>
                             </div>
                         </div>
                     </div>
@@ -1494,7 +1582,7 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="docClient">Client *</label>
-                                <select id="docClient" class="form-select" required></select>
+                                <input type="text" class="form-control" id="docClient" placeholder="Saisissez le nom du client" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label" for="docDate">Date</label>
@@ -1506,7 +1594,7 @@
                             </div>
                         </div>
                         <label class="form-label">Articles</label>
-                        <p style="color:#8a8fb8;font-size:12.5px;margin:-6px 0 10px;"><i class="fa-solid fa-circle-info"></i> Seuls les produits avec une sortie validee par le gerant sont disponibles (quantite limitee a la sortie restante).</p>
+                        <p style="color:#8a8fb8;font-size:12.5px;margin:-6px 0 10px;" id="docLinesHint"></p>
                         <div id="docLines"></div>
                         <button class="btn_one btn_light mb-2" id="btnAddDocLine" type="button"><i class="fa-solid fa-plus"></i> Ajouter une ligne</button>
                         <div class="doc-total-row">
@@ -1551,6 +1639,10 @@
                 </div>
                 <div class="modal-body">
                     <form id="payForm">
+                        <div class="mb-3">
+                            <label class="form-label" for="payClient">Nom du client *</label>
+                            <input type="text" class="form-control" id="payClient" placeholder="Saisissez le nom du client">
+                        </div>
                         <div class="mb-3">
                             <label class="form-label" for="payInvoice">Facture *</label>
                             <select id="payInvoice" class="form-select" required></select>
@@ -1628,6 +1720,7 @@
             factures: { title: 'Factures' },
             ventes: { title: 'Ventes' },
             paiements: { title: 'Paiements' },
+            rapports: { title: 'Rapports' },
             catalogue: { title: 'Catalogue produits' },
             operations: { title: 'Mes operations' },
             settings: { title: 'Parametres' }
@@ -1727,7 +1820,11 @@
         }
 
         function esc(s) {
-            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function sortByCreatedAtDesc(list) {
+            return list.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         }
 
         function ascii(s) {
@@ -1760,6 +1857,13 @@
         }
 
         function findClient(id) { return clients.find(c => c.id === id); }
+
+        function docClientName(doc) {
+            if (!doc) return null;
+            if (doc.clientName) return doc.clientName;
+            if (doc.clientId) { const c = findClient(doc.clientId); if (c) return c.name; }
+            return null;
+        }
         function findQuote(id) { return devis.find(d => d.id === id); }
         function findInvoice(id) { return factures.find(f => f.id === id); }
         function findProduct(id) { return products.find(p => p.id === id); }
@@ -1804,7 +1908,7 @@
                     { name: 'Stylo bleu', ref: 'REF-009', cat: 'Fournitures', unit: 'unite', min: 30, buy: 100, sell: 200, qty: 80 },
                     { name: 'Detergent 1L', ref: 'REF-010', cat: 'Hygiène', unit: 'litre', min: 10, buy: 1100, sell: 1500, qty: 15 }
                 ];
-                products = seed.map(p => ({ id: uid(), ...p }));
+                products = seed.map((p, i) => ({ id: uid(), ...p, createdAt: now - (seed.length - i) }));
                 save(STORE_PRODUCTS, products);
             } else {
                 products = load(STORE_PRODUCTS);
@@ -1820,31 +1924,20 @@
                 loadValidatedExits();
             }
 
-            if (!load(STORE_CLIENTS)) {
-                clients = [
-                    { id: uid(), name: 'Awa Diallo', phone: '+225 07 01 02 03', email: 'awa@mail.com', address: 'Abidjan, Cocody' },
-                    { id: uid(), name: 'Jean Kossi', phone: '+225 05 04 03 02', email: 'jean.kossi@mail.com', address: 'Abidjan, Marcory' },
-                    { id: uid(), name: 'Mariam Traore', phone: '+225 01 10 20 30', email: 'mariam@mail.com', address: 'Abidjan, Yopougon' },
-                    { id: uid(), name: "Paul N'Guessan", phone: '+225 07 08 09 10', email: 'paul@mail.com', address: 'Abidjan, Treichville' }
-                ];
-                save(STORE_CLIENTS, clients);
-            } else {
-                clients = load(STORE_CLIENTS);
-            }
+            clients = load(STORE_CLIENTS) || [];
 
             if (!load(STORE_QUOTES)) {
                 const p = products;
-                const c = clients;
                 devis = [
                     {
-                        id: uid(), num: 'DEV-001', clientId: c[1].id, date: now - 86400000 * 3, status: 'envoye',
+                        id: uid(), num: 'DEV-001', clientName: 'Jean Kossi', date: now - 86400000 * 3, status: 'envoye',
                         items: [
                             { productId: p[0].id, name: p[0].name, qty: 2, price: p[0].sell },
                             { productId: p[6].id, name: p[6].name, qty: 12, price: p[6].sell }
                         ]
                     },
                     {
-                        id: uid(), num: 'DEV-002', clientId: c[2].id, date: now - 86400000 * 1, status: 'brouillon',
+                        id: uid(), num: 'DEV-002', clientName: 'Mariam Traore', date: now - 86400000 * 1, status: 'brouillon',
                         items: [
                             { productId: p[3].id, name: p[3].name, qty: 5, price: p[3].sell }
                         ]
@@ -1858,24 +1951,23 @@
 
             if (!load(STORE_INVOICES)) {
                 const p = products;
-                const c = clients;
                 factures = [
                     {
-                        id: uid(), num: 'FACT-001', clientId: c[0].id, date: now - 86400000 * 4, source: 'facture', paid: 0,
+                        id: uid(), num: 'FACT-001', clientName: 'Awa Diallo', date: now - 86400000 * 4, source: 'facture', paid: 0,
                         items: [
                             { productId: p[1].id, name: p[1].name, qty: 4, price: p[1].sell },
                             { productId: p[4].id, name: p[4].name, qty: 10, price: p[4].sell }
                         ]
                     },
                     {
-                        id: uid(), num: 'FACT-002', clientId: c[1].id, date: now - 86400000 * 2, source: 'facture', paid: 15000,
+                        id: uid(), num: 'FACT-002', clientName: 'Jean Kossi', date: now - 86400000 * 2, source: 'facture', paid: 15000,
                         items: [
                             { productId: p[0].id, name: p[0].name, qty: 3, price: p[0].sell },
                             { productId: p[7].id, name: p[7].name, qty: 10, price: p[7].sell }
                         ]
                     },
                     {
-                        id: uid(), num: 'FACT-003', clientId: c[2].id, date: now - 86400000 * 0, source: 'facture', paid: 0,
+                        id: uid(), num: 'FACT-003', clientName: 'Mariam Traore', date: now - 86400000 * 0, source: 'facture', paid: 0,
                         items: [
                             { productId: p[8].id, name: p[8].name, qty: 25, price: p[8].sell }
                         ]
@@ -1949,11 +2041,11 @@
                 return;
             }
             tbody.innerHTML = list.map(f => {
-                const c = findClient(f.clientId);
+                const c = docClientName(f);
                 const st = invoiceStatus(f);
                 return '<tr>' +
                     '<td class="td-title">' + esc(f.num) + '</td>' +
-                    '<td>' + esc(c ? c.name : '—') + '</td>' +
+                    '<td>' + esc(c || '—') + '</td>' +
                     '<td class="td-sub">' + fmtDateShort(f.date) + '</td>' +
                     '<td><span class="money-pill">' + fmtMoney(f.total) + '</span></td>' +
                     '<td><span class="badge-st ' + st.cls + '">' + st.label + '</span></td>' +
@@ -1962,7 +2054,7 @@
         }
 
         function renderRecentOps() {
-            const list = operations.slice(0, 6);
+            const list = operations.slice().sort((a, b) => b.date - a.date).slice(0, 6);
             const el = document.getElementById('recentOps');
             if (!list.length) {
                 el.innerHTML = '<li class="text-muted">Aucune operation pour le moment.</li>';
@@ -1984,8 +2076,8 @@
             let list = devis.slice().sort((a, b) => b.date - a.date);
             if (q) {
                 list = list.filter(d => {
-                    const c = findClient(d.clientId);
-                    return d.num.toLowerCase().includes(q) || (c && c.name.toLowerCase().includes(q));
+                    const cn = docClientName(d);
+                    return d.num.toLowerCase().includes(q) || (cn && cn.toLowerCase().includes(q));
                 });
             }
             return list;
@@ -1996,12 +2088,12 @@
             const tbody = document.getElementById('quotesBody');
             document.getElementById('quotesEmpty').style.display = list.length ? 'none' : 'block';
             tbody.innerHTML = list.map(d => {
-                const c = findClient(d.clientId);
+                const c = docClientName(d);
                 const st = quoteStatus(d);
                 const canConvert = d.status !== 'facture' && d.status !== 'annule';
                 return '<tr>' +
                     '<td class="td-title">' + esc(d.num) + '</td>' +
-                    '<td>' + esc(c ? c.name : '—') + '</td>' +
+                    '<td>' + esc(c || '—') + '</td>' +
                     '<td class="td-sub">' + fmtDateShort(d.date) + '</td>' +
                     '<td><span class="money-pill">' + fmtMoney(d.total) + '</span></td>' +
                     '<td><span class="badge-st ' + st.cls + '">' + st.label + '</span></td>' +
@@ -2020,9 +2112,9 @@
             let list = factures.slice().sort((a, b) => b.date - a.date);
             if (q) {
                 list = list.filter(f => {
-                    const c = findClient(f.clientId);
+                    const cn = docClientName(f);
                     const st = invoiceStatus(f);
-                    return f.num.toLowerCase().includes(q) || (c && c.name.toLowerCase().includes(q)) || st.label.toLowerCase().includes(q);
+                    return f.num.toLowerCase().includes(q) || (cn && cn.toLowerCase().includes(q)) || st.label.toLowerCase().includes(q);
                 });
             }
             return list;
@@ -2033,12 +2125,12 @@
             const tbody = document.getElementById('invoicesBody');
             document.getElementById('invoicesEmpty').style.display = list.length ? 'none' : 'block';
             tbody.innerHTML = list.map(f => {
-                const c = findClient(f.clientId);
+                const c = docClientName(f);
                 const st = invoiceStatus(f);
                 const rest = f.total - f.paid;
                 return '<tr>' +
                     '<td class="td-title">' + esc(f.num) + '</td>' +
-                    '<td>' + esc(c ? c.name : '—') + '</td>' +
+                    '<td>' + esc(c || '—') + '</td>' +
                     '<td class="td-sub">' + fmtDateShort(f.date) + '</td>' +
                     '<td><span class="money-pill">' + fmtMoney(f.total) + '</span></td>' +
                     '<td>' + fmtMoney(f.paid) + '</td>' +
@@ -2055,6 +2147,11 @@
         }
 
         /* ---------- Rendu : Ventes ---------- */
+        function saleMethodOf(f) {
+            const pm = payments.filter(p => p.invoiceId === f.id).sort((a, b) => b.date - a.date)[0];
+            return pm ? pm.method : (f.payMethod || 'Especes');
+        }
+
         function renderSales() {
             const today = startOfToday();
             const week = today - 86400000 * 7;
@@ -2064,17 +2161,52 @@
             const tbody = document.getElementById('salesBody');
             document.getElementById('salesEmpty').style.display = list.length ? 'none' : 'block';
             tbody.innerHTML = list.map(f => {
-                const c = findClient(f.clientId);
+                const c = docClientName(f);
                 const st = invoiceStatus(f);
                 return '<tr>' +
                     '<td class="td-title">' + esc(f.num) + '</td>' +
-                    '<td>' + esc(c ? c.name : 'Client de passage') + '</td>' +
+                    '<td>' + esc(c || 'Client de passage') + '</td>' +
                     '<td class="td-sub">' + fmtDate(f.date) + '</td>' +
                     '<td><span class="money-pill">' + fmtMoney(f.total) + '</span></td>' +
-                    '<td><span class="method-pill">' + esc(f.payMethod || 'Especes') + '</span></td>' +
+                    '<td><span class="method-pill">' + esc(saleMethodOf(f)) + '</span></td>' +
                     '<td><span class="badge-st ' + st.cls + '">' + st.label + '</span></td>' +
                     '</tr>';
             }).join('');
+        }
+
+        /* ---------- Rendu : Session de paiement (sorties validees) ---------- */
+        function renderExitPayments() {
+            const q = (document.getElementById('exitPaymentSearch').value || '').toLowerCase();
+            let list = validatedExits
+                .map(e => ({ exit: e, product: findProduct(e.productId), rem: Math.max(0, Number(e.qty || 0) - Number(e.used || 0)) }))
+                .filter(x => x.product && x.rem > 0)
+                .sort((a, b) => b.exit.date - a.exit.date);
+            if (q) {
+                list = list.filter(x =>
+                    (x.product.name + ' ' + (x.product.ref || '') + ' ' + (x.exit.reason || '')).toLowerCase().includes(q)
+                );
+            }
+            const tbody = document.getElementById('exitPaymentsBody');
+            document.getElementById('exitPaymentsEmpty').style.display = list.length ? 'none' : 'block';
+            tbody.innerHTML = list.map(x => {
+                return '<tr>' +
+                    '<td class="td-sub">' + fmtDate(x.exit.date) + '</td>' +
+                    '<td><div class="td-title">' + esc(x.product.name) + '</div><div class="td-sub">' + (x.product.ref ? 'Ref : ' + esc(x.product.ref) : 'Sans reference') + '</div></td>' +
+                    '<td><span class="qty-pill">' + x.exit.qty + '</span> ' + esc(x.product.unit || 'unite') + '</td>' +
+                    '<td><span class="qty-pill">' + x.rem + '</span> ' + esc(x.product.unit || 'unite') + '</td>' +
+                    '<td>' + esc(x.exit.reason || '—') + '</td>' +
+                    '<td style="text-align:right;"><button class="btn_one btn_light" onclick="openInvoiceForExit(\'' + x.exit.id + '\')"><i class="fa-solid fa-file-invoice"></i> Facturer</button></td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function openInvoiceForExit(exitId) {
+            const ex = validatedExits.find(e => e.id === exitId);
+            if (!ex) return;
+            const rem = Math.max(0, Number(ex.qty || 0) - Number(ex.used || 0));
+            if (rem <= 0) { toast('Cette sortie est deja entierement facturee.', 'err'); return; }
+            goto('factures');
+            setTimeout(() => openDocModal('facture', null, [{ productId: ex.productId, qty: rem }]), 60);
         }
 
         /* ---------- Rendu : Paiements ---------- */
@@ -2084,19 +2216,19 @@
             if (q) {
                 list = list.filter(p => {
                     const f = findInvoice(p.invoiceId);
-                    const c = f ? findClient(f.clientId) : null;
-                    return (f && f.num.toLowerCase().includes(q)) || (c && c.name.toLowerCase().includes(q));
+                    const cn = f ? docClientName(f) : null;
+                    return (f && f.num.toLowerCase().includes(q)) || (cn && cn.toLowerCase().includes(q)) || (p.clientName || '').toLowerCase().includes(q);
                 });
             }
             const tbody = document.getElementById('paymentsBody');
             document.getElementById('paymentsEmpty').style.display = list.length ? 'none' : 'block';
             tbody.innerHTML = list.map(p => {
                 const f = findInvoice(p.invoiceId);
-                const c = f ? findClient(f.clientId) : null;
+                const cn = f ? docClientName(f) : null;
                 return '<tr>' +
                     '<td class="td-sub">' + fmtDate(p.date) + '</td>' +
                     '<td class="td-title">' + esc(f ? f.num : '—') + '</td>' +
-                    '<td>' + esc(c ? c.name : '—') + '</td>' +
+                    '<td>' + esc(p.clientName || cn || '—') + '</td>' +
                     '<td><span class="money-pill">' + fmtMoney(p.amount) + '</span></td>' +
                     '<td><span class="method-pill">' + esc(p.method || 'Especes') + '</span></td>' +
                     '</tr>';
@@ -2107,7 +2239,7 @@
         function renderCatalog() {
             const tbody = document.getElementById('catalogBody');
             document.getElementById('catalogEmpty').style.display = products.length ? 'none' : 'block';
-            tbody.innerHTML = products.map(p => {
+            tbody.innerHTML = sortByCreatedAtDesc(products).map(p => {
                 const avail = remainingExitQty(p.id);
                 const st = productStockStatus(p);
                 const fact = avail > 0
@@ -2126,7 +2258,7 @@
         /* ---------- Rendu : Operations ---------- */
         function renderOps() {
             const q = (document.getElementById('opSearch').value || '').toLowerCase();
-            let list = operations.slice();
+            let list = operations.slice().sort((a, b) => b.date - a.date);
             if (q) {
                 list = list.filter(o =>
                     (o.label + ' ' + o.detail).toLowerCase().includes(q)
@@ -2139,6 +2271,102 @@
                     '<td class="td-sub">' + fmtDate(o.date) + '</td>' +
                     '<td><span class="method-pill"><i class="fa-solid ' + opIcon(o.type) + '"></i> ' + esc(o.label) + '</span></td>' +
                     '<td>' + esc(o.detail) + '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        /* ---------- Rendu : Rapports (point de ventes par jour et par mois) ---------- */
+        function monthInput() {
+            const d = new Date();
+            const p = n => String(n).padStart(2, '0');
+            return d.getFullYear() + '-' + p(d.getMonth() + 1);
+        }
+
+        function repStatCard(icon, cls, value, label) {
+            return '<div class="stat-card"><div class="stat-ico ' + cls + '"><i class="fa-solid ' + icon + '"></i></div><div><h2>' + value + '</h2><p>' + label + '</p></div></div>';
+        }
+
+        function repMethodBreakdown(plist) {
+            const by = {};
+            plist.forEach(p => { const m = p.method || 'Especes'; by[m] = (by[m] || 0) + Number(p.amount || 0); });
+            return by;
+        }
+
+        function renderRapports() {
+            /* ---- Par jour ---- */
+            const dayVal = document.getElementById('repDay').value || todayInput();
+            const dStart = dateToTs(dayVal);
+            const dEnd = dStart + 86400000;
+            const dayFacts = factures.filter(f => f.date >= dStart && f.date < dEnd);
+            const dayPays = payments.filter(p => p.date >= dStart && p.date < dEnd);
+            const dayTotal = dayFacts.reduce((s, f) => s + Number(f.total || 0), 0);
+            const dayCash = dayPays.reduce((s, p) => s + Number(p.amount || 0), 0);
+            const dayBy = repMethodBreakdown(dayPays);
+            const dayChips = Object.keys(dayBy).length
+                ? Object.keys(dayBy).map(m => '<span class="method-pill">' + esc(m) + ' : ' + fmtMoney(dayBy[m]) + '</span>').join(' ')
+                : '<span class="td-sub">Aucun encaissement ce jour.</span>';
+
+            document.getElementById('repDayStats').innerHTML =
+                repStatCard('fa-cart-shopping', 'ic3', dayFacts.length, 'Ventes (factures)') +
+                repStatCard('fa-sack-dollar', 'ic4', fmtMoney(dayTotal), 'Total des ventes') +
+                repStatCard('fa-money-bill-wave', 'ic2', fmtMoney(dayCash), 'Encaissements du jour');
+            document.getElementById('repDayMethods').innerHTML = dayChips;
+            document.getElementById('repDayEmpty').style.display = dayFacts.length ? 'none' : 'block';
+            document.getElementById('repDayBody').innerHTML = dayFacts.slice().sort((a, b) => b.date - a.date).map(f => {
+                const st = invoiceStatus(f);
+                return '<tr>' +
+                    '<td class="td-title">' + esc(f.num) + '</td>' +
+                    '<td>' + esc(docClientName(f) || '—') + '</td>' +
+                    '<td><span class="method-pill">' + esc(saleMethodOf(f)) + '</span></td>' +
+                    '<td><span class="money-pill">' + fmtMoney(f.total) + '</span></td>' +
+                    '<td><span class="badge-st ' + st.cls + '">' + st.label + '</span></td>' +
+                    '</tr>';
+            }).join('');
+
+            /* ---- Par mois ---- */
+            const monthVal = document.getElementById('repMonth').value || monthInput();
+            const [my, mm] = monthVal.split('-').map(Number);
+            const mStart = new Date(my, mm - 1, 1).getTime();
+            const mEnd = new Date(my, mm, 1).getTime();
+            const monthFacts = factures.filter(f => f.date >= mStart && f.date < mEnd);
+            const monthPays = payments.filter(p => p.date >= mStart && p.date < mEnd);
+            const monthTotal = monthFacts.reduce((s, f) => s + Number(f.total || 0), 0);
+            const monthCash = monthPays.reduce((s, p) => s + Number(p.amount || 0), 0);
+
+            document.getElementById('repMonthStats').innerHTML =
+                repStatCard('fa-cart-shopping', 'ic3', monthFacts.length, 'Ventes (factures)') +
+                repStatCard('fa-sack-dollar', 'ic4', fmtMoney(monthTotal), 'Total des ventes') +
+                repStatCard('fa-money-bill-wave', 'ic2', fmtMoney(monthCash), 'Encaissements du mois');
+
+            const byDay = {};
+            monthFacts.forEach(f => {
+                const d = new Date(f.date);
+                const p = n => String(n).padStart(2, '0');
+                const key = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+                if (!byDay[key]) byDay[key] = { count: 0, total: 0 };
+                byDay[key].count++;
+                byDay[key].total += Number(f.total || 0);
+            });
+            document.getElementById('repMonthDaily').innerHTML = Object.keys(byDay).sort().reverse().map(k => {
+                const d = new Date(k);
+                const p = n => String(n).padStart(2, '0');
+                return '<tr>' +
+                    '<td class="td-title">' + p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + '</td>' +
+                    '<td>' + byDay[k].count + '</td>' +
+                    '<td><span class="money-pill">' + fmtMoney(byDay[k].total) + '</span></td>' +
+                    '</tr>';
+            }).join('') || '<tr><td colspan="3" class="text-center text-muted py-3">Aucune vente ce mois.</td></tr>';
+
+            document.getElementById('repMonthEmpty').style.display = monthFacts.length ? 'none' : 'block';
+            document.getElementById('repMonthBody').innerHTML = monthFacts.slice().sort((a, b) => b.date - a.date).map(f => {
+                const st = invoiceStatus(f);
+                return '<tr>' +
+                    '<td class="td-title">' + esc(f.num) + '</td>' +
+                    '<td class="td-sub">' + fmtDateShort(f.date) + '</td>' +
+                    '<td>' + esc(docClientName(f) || '—') + '</td>' +
+                    '<td><span class="method-pill">' + esc(saleMethodOf(f)) + '</span></td>' +
+                    '<td><span class="money-pill">' + fmtMoney(f.total) + '</span></td>' +
+                    '<td><span class="badge-st ' + st.cls + '">' + st.label + '</span></td>' +
                     '</tr>';
             }).join('');
         }
@@ -2158,22 +2386,41 @@
             renderQuotes();
             renderInvoices();
             renderSales();
+            renderExitPayments();
             renderPayments();
             renderCatalog();
             renderOps();
+            renderRapports();
             renderSettings();
-            fillDocClientSelect();
-            fillSaleClient();
             refreshPaySelect();
         }
 
         /* ---------- Selects ---------- */
         function productOptions() {
-            const list = invoiceableProducts();
+            const list = sortByCreatedAtDesc(invoiceableProducts());
             if (!list.length) return '<option value="">Aucune sortie validee par le gerant</option>';
             return list.map(p =>
                 '<option value="' + p.id + '" data-avail="' + remainingExitQty(p.id) + '">' + esc(p.name) + ' — ' + fmtMoney(p.sell) + ' (dispo : ' + remainingExitQty(p.id) + ' ' + esc(p.unit || 'unite') + ')</option>'
             ).join('');
+        }
+
+        function docProductOptions() {
+            const isQuote = docModalType === 'devis';
+            const list = sortByCreatedAtDesc(isQuote ? products : invoiceableProducts());
+            if (!list.length) return '<option value="">' + (isQuote ? 'Aucun produit au catalogue' : 'Aucune sortie validee par le gerant') + '</option>';
+            return list.map(p => {
+                const avail = docLineMaxQty(p.id);
+                return '<option value="' + p.id + '" data-avail="' + avail + '">' + esc(p.name) + ' — ' + fmtMoney(p.sell) + ' (dispo : ' + avail + ' ' + esc(p.unit || 'unite') + ')</option>';
+            }).join('');
+        }
+
+        function docLineMaxQty(productId) {
+            if (!productId) return 0;
+            if (docModalType === 'devis') {
+                const p = findProduct(productId);
+                return p ? Number(p.qty || 0) : 0;
+            }
+            return remainingExitQty(productId);
         }
 
         function applyLineAvailability(line) {
@@ -2184,23 +2431,19 @@
             return avail;
         }
 
-        function fillDocClientSelect() {
-            document.getElementById('docClient').innerHTML = clients.map(c =>
-                '<option value="' + c.id + '">' + esc(c.name) + '</option>'
-            ).join('') || '<option value="">Aucun client</option>';
-        }
-
-        function fillSaleClient() {
-            document.getElementById('saleClient').innerHTML =
-                '<option value="">Client de passage</option>' +
-                clients.map(c => '<option value="' + c.id + '">' + esc(c.name) + '</option>').join('');
+        function applyDocLineAvailability(line) {
+            const sel = line.querySelector('.line-product');
+            const qty = line.querySelector('.line-qty');
+            const avail = sel.value ? docLineMaxQty(sel.value) : 0;
+            if (qty) qty.max = Math.max(1, avail);
+            return avail;
         }
 
         function refreshPaySelect() {
             const pending = factures.filter(f => f.total - f.paid > 0).slice().sort((a, b) => b.date - a.date);
             document.getElementById('payInvoice').innerHTML = pending.map(f => {
-                const c = findClient(f.clientId);
-                return '<option value="' + f.id + '">' + esc(f.num) + ' — ' + esc(c ? c.name : 'Client') + ' (reste : ' + fmtMoney(f.total - f.paid) + ')</option>';
+                const cn = docClientName(f);
+                return '<option value="' + f.id + '">' + esc(f.num) + ' — ' + esc(cn || 'Client') + ' (reste : ' + fmtMoney(f.total - f.paid) + ')</option>';
             }).join('') || '<option value="">Aucune facture en attente</option>';
         }
 
@@ -2209,9 +2452,9 @@
             const wrap = document.getElementById('docLines');
             const div = document.createElement('div');
             div.className = 'doc-line';
-            const avail = productId ? remainingExitQty(productId) : 0;
+            const avail = productId ? docLineMaxQty(productId) : 0;
             div.innerHTML =
-                '<select class="form-select line-product">' + productOptions() + '</select>' +
+                '<select class="form-select line-product">' + docProductOptions() + '</select>' +
                 '<input type="number" class="form-control line-qty" min="1" step="1" max="' + Math.max(1, avail) + '" value="' + (qty || 1) + '">' +
                 '<input type="number" class="form-control line-price" min="0" step="1" value="' + (price || '') + '" placeholder="Prix">' +
                 '<div class="line-total">0 FCFA</div>' +
@@ -2221,14 +2464,14 @@
                 if (!sel.querySelector('option[value="' + productId + '"]')) {
                     const p = findProduct(productId);
                     sel.insertAdjacentHTML('afterbegin',
-                        '<option value="' + productId + '">' + esc(p ? p.name : 'Produit') + ' — ' + fmtMoney(p ? p.sell : 0) + ' (sortie deja consommee)</option>');
+                        '<option value="' + productId + '">' + esc(p ? p.name : 'Produit') + ' — ' + fmtMoney(p ? p.sell : 0) + (docModalType === 'devis' ? ' (hors catalogue)' : ' (sortie deja consommee)') + '</option>');
                 }
                 sel.value = productId;
             }
             if (!productId) {
-                const list = invoiceableProducts();
+                const list = docModalType === 'devis' ? products : invoiceableProducts();
                 div.querySelector('.line-product').value = list.length ? list[0].id : '';
-                div.querySelector('.line-qty').max = Math.max(1, remainingExitQty(list.length ? list[0].id : ''));
+                div.querySelector('.line-qty').max = Math.max(1, docLineMaxQty(list.length ? list[0].id : ''));
             }
             if (!price && productId) {
                 const p = findProduct(productId);
@@ -2294,7 +2537,7 @@
                 const line = sel.closest('.doc-line');
                 const p = findProduct(sel.value);
                 if (p) line.querySelector('.line-price').value = p.sell;
-                applyLineAvailability(line);
+                applyDocLineAvailability(line);
                 updateLineTotal(line);
                 computeDocTotal();
             });
@@ -2313,26 +2556,28 @@
         })();
 
         /* ---------- Modale devis / facture ---------- */
-        function openDocModal(type, id) {
+        function openDocModal(type, id, prefillItems) {
             docModalType = type;
             docEditId = id || null;
             document.getElementById('docForm').reset();
             document.getElementById('dfId').value = '';
             document.getElementById('docLines').innerHTML = '';
             document.getElementById('docTotal').textContent = '0 FCFA';
-            fillDocClientSelect();
 
             const isQuote = type === 'devis';
             document.getElementById('docModalTitle').textContent = isQuote ? (id ? 'Modifier le devis' : 'Nouveau devis') : (id ? 'Modifier la facture' : 'Nouvelle facture');
             document.getElementById('docTypeHidden').value = type;
             document.getElementById('docDate').value = todayInput();
+            document.getElementById('docLinesHint').textContent = isQuote
+                ? 'Devis etabli avant la vente : tous les produits du catalogue sont disponibles.'
+                : 'Seuls les produits avec une sortie validee par le gerant sont disponibles (quantite limitee a la sortie restante).';
 
             if (id) {
                 const doc = isQuote ? findQuote(id) : findInvoice(id);
                 if (!doc) return;
                 docEditId = id;
                 document.getElementById('dfId').value = doc.id;
-                document.getElementById('docClient').value = doc.clientId;
+                document.getElementById('docClient').value = docClientName(doc) || '';
                 document.getElementById('docNum').value = doc.num;
                 const d = new Date(doc.date);
                 const p = n => String(n).padStart(2, '0');
@@ -2341,7 +2586,11 @@
                 computeDocTotal();
             } else {
                 document.getElementById('docNum').value = isQuote ? nextDocNum('DEV', devis) : nextDocNum('FACT', factures);
-                if (products.length) addDocLine();
+                if (prefillItems && prefillItems.length) {
+                    prefillItems.forEach(it => addDocLine(it.productId, it.qty, it.price));
+                } else if (products.length) {
+                    addDocLine();
+                }
                 computeDocTotal();
             }
             bootstrap.Modal.getOrCreateInstance(document.getElementById('docModal')).show();
@@ -2358,7 +2607,7 @@
 
         document.getElementById('btnSaveDoc').addEventListener('click', () => {
             const type = docModalType;
-            const clientId = document.getElementById('docClient').value;
+            const clientName = document.getElementById('docClient').value.trim();
             const date = dateToTs(document.getElementById('docDate').value);
             const lines = Array.from(document.querySelectorAll('#docLines .doc-line')).map(line => {
                 const productId = line.querySelector('.line-product').value;
@@ -2368,18 +2617,20 @@
                 return { productId, name: p ? p.name : 'Produit', qty, price };
             }).filter(it => it.qty > 0 && it.price > 0);
 
-            if (!clientId) { toast('Selectionnez un client.', 'err'); return; }
+            if (!clientName) { toast('Saisissez le nom du client.', 'err'); return; }
             if (!lines.length) { toast('Ajoutez au moins une ligne avec une quantite et un prix.', 'err'); return; }
             const docBeingEdited = docEditId ? (type === 'devis' ? findQuote(docEditId) : findInvoice(docEditId)) : null;
             const consumed = {};
             if (docBeingEdited) {
                 docBeingEdited.items.forEach(it => { consumed[it.productId] = (consumed[it.productId] || 0) + it.qty; });
             }
-            for (const it of lines) {
-                const allowed = remainingExitQty(it.productId) + (consumed[it.productId] || 0);
-                if (it.qty > allowed) {
-                    toast('Quantite insuffisante pour "' + it.name + '" : seule ' + allowed + ' disponible (sorties validees par le gerant).', 'err');
-                    return;
+            if (type === 'facture') {
+                for (const it of lines) {
+                    const allowed = remainingExitQty(it.productId) + (consumed[it.productId] || 0);
+                    if (it.qty > allowed) {
+                        toast('Quantite insuffisante pour "' + it.name + '" : seule ' + allowed + ' disponible (sorties validees par le gerant).', 'err');
+                        return;
+                    }
                 }
             }
             const total = lines.reduce((s, it) => s + it.qty * it.price, 0);
@@ -2389,14 +2640,14 @@
                 if (!doc) return;
                 const paid = doc.paid || 0;
                 if (type === 'facture' && total < paid) { toast('Le total ne peut pas etre inferieur au montant deja paye.', 'err'); return; }
-                Object.assign(doc, { clientId, date, items: lines, total });
+                Object.assign(doc, { clientName, date, items: lines, total });
                 if (type === 'facture') doc.status = undefined;
                 save(type === 'devis' ? STORE_QUOTES : STORE_INVOICES, type === 'devis' ? devis : factures);
                 logOp(type, type === 'devis' ? 'Modification devis' : 'Modification facture', (type === 'devis' ? 'Devis ' : 'Facture ') + doc.num + ' modifie.');
                 toast((type === 'devis' ? 'Devis ' : 'Facture ') + doc.num + ' modifie avec succes.', 'ok');
             } else {
                 const num = nextDocNum(type === 'devis' ? 'DEV' : 'FACT', type === 'devis' ? devis : factures);
-                const doc = { id: uid(), num, clientId, date, items: lines, total, source: type };
+                const doc = { id: uid(), num, clientName, date, items: lines, total, source: type };
                 if (type === 'facture') { doc.paid = 0; }
                 if (type === 'devis') { doc.status = 'envoye'; }
                 (type === 'devis' ? devis : factures).push(doc);
@@ -2404,7 +2655,7 @@
                 if (type === 'facture') {
                     lines.forEach(it => consumeValidatedExits(it.productId, it.qty));
                 }
-                logOp(type, type === 'devis' ? 'Creation devis' : 'Creation facture', (type === 'devis' ? 'Devis ' : 'Facture ') + num + (type === 'devis' ? ' cree pour ' : ' creee pour ') + (findClient(clientId) ? findClient(clientId).name : 'client') + '.');
+                logOp(type, type === 'devis' ? 'Creation devis' : 'Creation facture', (type === 'devis' ? 'Devis ' : 'Facture ') + num + (type === 'devis' ? ' cree pour ' : ' creee pour ') + clientName + '.');
                 toast((type === 'devis' ? 'Devis ' : 'Facture ') + num + ' enregistre avec succes.', 'ok');
             }
             bootstrap.Modal.getInstance(document.getElementById('docModal')).hide();
@@ -2428,7 +2679,7 @@
             const inv = {
                 id: uid(),
                 num,
-                clientId: q.clientId,
+                clientName: docClientName(q) || '',
                 date: Date.now(),
                 items: q.items.map(it => Object.assign({}, it)),
                 total: q.total,
@@ -2480,7 +2731,7 @@
             const f = findInvoice(id);
             if (!f) return;
             viewedInvoiceId = id;
-            const c = findClient(f.clientId);
+            const c = docClientName(f);
             const st = invoiceStatus(f);
             const rest = f.total - f.paid;
             const itemsRows = f.items.map(it =>
@@ -2497,7 +2748,7 @@
                 '<div class="inv-recap">' +
                 '<div class="ir-row"><span class="ir-label">Numero</span><span class="ir-val">' + esc(f.num) + '</span></div>' +
                 '<div class="ir-row"><span class="ir-label">Date</span><span class="ir-val">' + fmtDate(f.date) + '</span></div>' +
-                '<div class="ir-row"><span class="ir-label">Client</span><span class="ir-val">' + esc(c ? c.name : '—') + '</span></div>' +
+                '<div class="ir-row"><span class="ir-label">Client</span><span class="ir-val">' + esc(c || '—') + '</span></div>' +
                 (c && c.phone ? '<div class="ir-row"><span class="ir-label">Telephone</span><span class="ir-val">' + esc(c.phone) + '</span></div>' : '') +
                 '<div class="ir-row"><span class="ir-label">Statut</span><span class="badge-st ' + st.cls + '">' + st.label + '</span></div>' +
                 '</div>' +
@@ -2532,7 +2783,7 @@
         function printInvoice(id) {
             const f = findInvoice(id);
             if (!f) return;
-            const c = findClient(f.clientId);
+            const c = docClientName(f);
             const st = invoiceStatus(f);
             const itemsRows = f.items.map(it =>
                 '<tr><td>' + esc(it.name) + '</td><td style="text-align:center;">' + it.qty + '</td><td style="text-align:right;">' + fmtMoney(it.price) + '</td><td style="text-align:right;">' + fmtMoney(it.qty * it.price) + '</td></tr>'
@@ -2553,7 +2804,7 @@
                 '.foot{margin-top:40px;text-align:center;font-size:12px;color:#8a8fb8;border-top:1px solid #e8eafb;padding-top:12px;}' +
                 '</style></head><body>' +
                 '<div class="h"><div><h1>eMarket</h1><div>Gestion commerciale</div></div><div class="logo"><strong>Facture ' + esc(f.num) + '</strong><br>' + fmtDate(f.date) + '</div></div>' +
-                '<div class="meta"><div><strong>Client :</strong> ' + esc(c ? c.name : '—') + '<br>' + esc(c ? (c.phone || '') : '') + '<br>' + esc(c ? (c.address || '') : '') + '</div><div><strong>Statut :</strong> ' + st.label + '</div></div>' +
+                '<div class="meta"><div><strong>Client :</strong> ' + esc(c || '—') + '</div><div><strong>Statut :</strong> ' + st.label + '</div></div>' +
                 '<table><thead><tr><th>Designation</th><th>Qte</th><th>Prix unitaire</th><th style="text-align:right;">Total</th></tr></thead><tbody>' + itemsRows + '</tbody></table>' +
                 '<div class="tot">Total : ' + fmtMoney(f.total) + '<div class="big">Paye : ' + fmtMoney(f.paid) + '</div><div class="big">Reste : ' + fmtMoney(f.total - f.paid) + '</div></div>' +
                 '<div class="foot">Document genere par eMarket - ' + new Date().toLocaleString('fr-FR') + '</div>' +
@@ -2575,7 +2826,7 @@
         }
 
         function buildInvoicePdf(f) {
-            const c = findClient(f.clientId);
+            const c = docClientName(f);
             const st = invoiceStatus(f);
 
             const BRAND = '0.322 0.373 0.882';
@@ -2609,9 +2860,7 @@
 
             /* Bloc client / infos */
             text('CLIENT', 50, 794, 8, 2, GREY);
-            text(c ? c.name : 'Client', 50, 781, 13, 2);
-            if (c && c.phone) text('Tel : ' + c.phone, 50, 768, 9, 1, GREY);
-            if (c && c.address) text(c.address, 50, 755, 9, 1, GREY);
+            text(c || 'Client', 50, 781, 13, 2);
             text('Statut : ' + st.label, 300, 781, 11, 2);
             text('Total facture : ' + pdfMoney(f.total), 300, 768, 9, 1, GREY);
             text('Reste a payer : ' + pdfMoney(f.total - f.paid), 300, 755, 9, 1, GREY);
@@ -2744,7 +2993,7 @@
         document.getElementById('saleDate').value = todayInput();
 
         document.getElementById('btnSaveSale').addEventListener('click', () => {
-            const clientId = document.getElementById('saleClient').value;
+            const clientName = document.getElementById('saleClient').value.trim();
             const method = document.getElementById('saleMethod').value;
             const date = dateToTs(document.getElementById('saleDate').value);
             const lines = Array.from(document.querySelectorAll('#saleLines .doc-line')).map(line => {
@@ -2755,6 +3004,7 @@
                 return { productId, name: p ? p.name : 'Produit', qty, price };
             }).filter(it => it.qty > 0 && it.price > 0);
 
+            if (!clientName) { toast('Saisissez le nom du client.', 'err'); return; }
             if (!lines.length) { toast('Ajoutez au moins une ligne a la vente.', 'err'); return; }
             for (const it of lines) {
                 const avail = remainingExitQty(it.productId);
@@ -2766,22 +3016,20 @@
             const total = lines.reduce((s, it) => s + it.qty * it.price, 0);
 
             const num = nextDocNum('FACT', factures);
-            const inv = { id: uid(), num, clientId: clientId || null, date, items: lines, total, paid: total, source: 'vente', payMethod: method };
+            const inv = { id: uid(), num, clientName, date, items: lines, total, paid: 0, source: 'vente' };
             factures.unshift(inv);
             save(STORE_INVOICES, factures);
 
-            payments.push({ id: uid(), invoiceId: inv.id, date, amount: total, method });
-            save(STORE_PAYMENTS, payments);
-
             lines.forEach(it => consumeValidatedExits(it.productId, it.qty));
 
-            const cName = clientId && findClient(clientId) ? findClient(clientId).name : 'Client de passage';
-            logOp('vente', 'Vente enregistree', 'Vente ' + num + ' de ' + fmtMoney(total) + ' (' + method + ') pour ' + cName + '.');
+            logOp('vente', 'Vente enregistree', 'Vente ' + num + ' de ' + fmtMoney(total) + ' pour ' + clientName + '.');
             document.getElementById('saleLines').innerHTML = '';
+            document.getElementById('saleClient').value = '';
             if (products.length) addSaleLine();
             computeSaleTotal();
-            toast('Vente ' + num + ' enregistree : ' + fmtMoney(total) + ' encaisses.', 'ok');
+            toast('Vente ' + num + ' enregistree. Validez maintenant le paiement.', 'ok');
             renderAll();
+            openPayModal(inv.id, method);
         });
 
         document.querySelectorAll('#saleFilters button').forEach(btn => {
@@ -2794,24 +3042,34 @@
         });
 
         /* ---------- Paiements ---------- */
-        function openPayModal(invoiceId) {
+        function fillPayClient() {
+            const f = findInvoice(document.getElementById('payInvoice').value);
+            document.getElementById('payClient').value = docClientName(f) || '';
+        }
+
+        function openPayModal(invoiceId, method) {
             refreshPaySelect();
             document.getElementById('payForm').reset();
-            document.getElementById('payDate').value = todayInput();
             const sel = document.getElementById('payInvoice');
             if (invoiceId) {
                 const f = findInvoice(invoiceId);
                 if (f && f.total - f.paid > 0) {
                     sel.value = invoiceId;
                     document.getElementById('payAmount').value = f.total - f.paid;
+                    const d = new Date(f.date);
+                    const p = n => String(n).padStart(2, '0');
+                    document.getElementById('payDate').value = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
                 }
             } else {
+                document.getElementById('payDate').value = todayInput();
                 if (sel.options.length) {
                     const firstId = sel.options[0].value;
                     const f = findInvoice(firstId);
                     if (f) document.getElementById('payAmount').value = f.total - f.paid;
                 }
             }
+            if (method) document.getElementById('payMethod').value = method;
+            fillPayClient();
             bootstrap.Modal.getOrCreateInstance(document.getElementById('payModal')).show();
         }
 
@@ -2820,26 +3078,29 @@
         document.getElementById('payInvoice').addEventListener('change', e => {
             const f = findInvoice(e.target.value);
             if (f) document.getElementById('payAmount').value = f.total - f.paid;
+            fillPayClient();
         });
 
         document.getElementById('btnSavePay').addEventListener('click', () => {
             const invoiceId = document.getElementById('payInvoice').value;
+            const clientName = document.getElementById('payClient').value.trim();
             const amount = Number(document.getElementById('payAmount').value) || 0;
             const method = document.getElementById('payMethod').value;
             const date = dateToTs(document.getElementById('payDate').value);
             const f = findInvoice(invoiceId);
             if (!f) { toast('Selectionnez une facture.', 'err'); return; }
+            if (!clientName) { toast('Saisissez le nom du client.', 'err'); return; }
             const rest = f.total - f.paid;
             if (amount <= 0) { toast('Le montant doit etre superieur a 0.', 'err'); return; }
             if (amount > rest) { toast('Le montant depasse le reste a payer (' + fmtMoney(rest) + ').', 'err'); return; }
 
-            payments.push({ id: uid(), invoiceId, date, amount, method });
+            payments.push({ id: uid(), invoiceId, date, amount, method, clientName });
             save(STORE_PAYMENTS, payments);
             f.paid = f.paid + amount;
             save(STORE_INVOICES, factures);
-            logOp('paiement', 'Paiement encaisse', 'Paiement de ' + fmtMoney(amount) + ' (' + method + ') sur ' + f.num + '.');
+            logOp('paiement', 'Paiement encaisse', 'Paiement de ' + fmtMoney(amount) + ' (' + method + ') de ' + clientName + ' sur ' + f.num + '.');
             bootstrap.Modal.getInstance(document.getElementById('payModal')).hide();
-            toast('Paiement de ' + fmtMoney(amount) + ' enregistre sur ' + f.num + '.', 'ok');
+            toast('Paiement de ' + fmtMoney(amount) + ' enregistre sur ' + f.num + ' pour ' + clientName + '.', 'ok');
             renderAll();
         });
 
@@ -2918,7 +3179,14 @@
         document.getElementById('quoteSearch').addEventListener('input', renderQuotes);
         document.getElementById('invoiceSearch').addEventListener('input', renderInvoices);
         document.getElementById('paymentSearch').addEventListener('input', renderPayments);
+        document.getElementById('exitPaymentSearch').addEventListener('input', renderExitPayments);
         document.getElementById('opSearch').addEventListener('input', renderOps);
+
+        /* ---------- Rapports (point de ventes) ---------- */
+        document.getElementById('repDay').value = todayInput();
+        document.getElementById('repMonth').value = monthInput();
+        document.getElementById('repDay').addEventListener('input', renderRapports);
+        document.getElementById('repMonth').addEventListener('input', renderRapports);
 
         /* ---------- Parametres (profil & mot de passe) ---------- */
         document.getElementById('btnSaveProfile').addEventListener('click', () => {
