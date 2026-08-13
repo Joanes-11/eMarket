@@ -1701,7 +1701,8 @@
         /* ============================================================
            eMarket - Caissier (page de demonstration)
            Donnees conservees dans localStorage.
-           ============================================================ */
+           ===============================================
+           ============= */
 
         const STORE_CLIENTS = 'emarket_caissier_clients';
         const STORE_QUOTES = 'emarket_caissier_devis';
@@ -1711,6 +1712,7 @@
         const STORE_PRODUCTS = 'emarket_stock_products';
         const STORE_VALIDATED_EXITS = 'emarket_caissier_sorties_validees';
         const STORE_PROFILE = 'emarket_caissier_profile';
+        const API_BASE = '../backend/api';
 
         const DEFAULT_PROFILE = { name: 'Caissier', email: 'caissier@emarket.com', role: 'Caissier', password: '123456' };
 
@@ -1786,15 +1788,162 @@
             return left <= 0;
         }
 
-        function loadProfile() {
-            profile = load(STORE_PROFILE);
-            if (!profile || !profile.name) {
-                profile = Object.assign({}, DEFAULT_PROFILE);
+        async function apiFetch(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.success === false) {
+                throw new Error(payload.message || 'Erreur API');
+            }
+            return payload;
+        }
+
+        function normalizeProduct(p) {
+            return {
+                id: String(p.id),
+                name: p.name,
+                ref: p.ref || '',
+                cat: p.cat || p.category_name || '',
+                unit: p.unit || 'unite',
+                min: Number(p.min || p.min_qty || 0),
+                buy: Number(p.buy || p.buy_price || 0),
+                sell: Number(p.sell || p.sell_price || 0),
+                qty: Number(p.qty || 0),
+                createdAt: Number(p.createdAt || p.created_at || Date.now())
+            };
+        }
+
+        function normalizeQuote(q) {
+            return {
+                id: String(q.id),
+                num: q.num,
+                clientName: q.client_name || q.clientName || '',
+                date: Number(q.date || q.createdAt || Date.now()),
+                status: q.status || 'envoye',
+                total: Number(q.total || 0),
+                items: Array.isArray(q.items) ? q.items.map(it => ({
+                    productId: String(it.product_id || it.productId || 0),
+                    name: it.name || '',
+                    qty: Number(it.qty || 0),
+                    price: Number(it.price || 0)
+                })) : []
+            };
+        }
+
+        function normalizeInvoice(f) {
+            return {
+                id: String(f.id),
+                num: f.num,
+                clientName: f.client_name || f.clientName || '',
+                date: Number(f.date || f.createdAt || Date.now()),
+                total: Number(f.total || 0),
+                paid: Number(f.paid || 0),
+                source: f.source || 'facture',
+                status: f.status || 'en attente',
+                items: Array.isArray(f.items) ? f.items.map(it => ({
+                    productId: String(it.product_id || it.productId || 0),
+                    validated_exit_id: it.validated_exit_id ?? null,
+                    name: it.name || '',
+                    qty: Number(it.qty || 0),
+                    price: Number(it.price || 0)
+                })) : []
+            };
+        }
+
+        function normalizePayment(p) {
+            return {
+                id: String(p.id),
+                invoiceId: String(p.invoice_id || p.invoiceId),
+                date: Number(p.createdAt || p.date || Date.now()),
+                amount: Number(p.amount || 0),
+                method: p.method || 'Especes',
+                clientName: p.client_name || p.clientName || ''
+            };
+        }
+
+        async function loadProfile() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php`);
+                profile = payload.data || { ...DEFAULT_PROFILE };
+                if (!profile.role) profile.role = DEFAULT_PROFILE.role;
                 saveProfile();
+                return profile;
+            } catch (e) {
+                profile = load(STORE_PROFILE);
+                if (!profile || !profile.name) {
+                    profile = Object.assign({}, DEFAULT_PROFILE);
+                    saveProfile();
+                }
+                return profile;
             }
         }
         function saveProfile() {
             save(STORE_PROFILE, profile);
+        }
+
+        async function loadProducts() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/products.php`);
+                products = Array.isArray(payload.data) ? payload.data.map(normalizeProduct) : [];
+                save(STORE_PRODUCTS, products);
+            } catch (e) {
+                products = load(STORE_PRODUCTS) || [];
+            }
+        }
+
+        async function loadValidatedExits() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/movements.php?action=validated-exits`);
+                validatedExits = Array.isArray(payload.data) ? payload.data.map(item => ({
+                    id: String(item.id),
+                    moveId: String(item.id),
+                    productId: String(item.product_id || item.productId),
+                    qty: Number(item.qty || 0),
+                    used: Number(item.used || 0),
+                    reason: item.reason || '',
+                    date: Number(item.createdAt || item.date || Date.now())
+                })) : [];
+                saveValidatedExits();
+            } catch (e) {
+                validatedExits = load(STORE_VALIDATED_EXITS) || [];
+            }
+        }
+
+        async function loadQuotes() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/quotes.php`);
+                devis = Array.isArray(payload.data) ? payload.data.map(normalizeQuote) : [];
+                save(STORE_QUOTES, devis);
+            } catch (e) {
+                devis = load(STORE_QUOTES) || [];
+            }
+        }
+
+        async function loadInvoices() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/invoices.php`);
+                factures = Array.isArray(payload.data) ? payload.data.map(normalizeInvoice) : [];
+                save(STORE_INVOICES, factures);
+            } catch (e) {
+                factures = load(STORE_INVOICES) || [];
+            }
+        }
+
+        async function loadPayments() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/payments.php`);
+                payments = Array.isArray(payload.data) ? payload.data.map(normalizePayment) : [];
+                save(STORE_PAYMENTS, payments);
+            } catch (e) {
+                payments = load(STORE_PAYMENTS) || [];
+            }
+        }
+
+        async function loadOperations() {
+            operations = load(STORE_OPS) || [];
         }
 
         /* ---------- Helpers ---------- */
@@ -2605,7 +2754,7 @@
             computeDocTotal();
         });
 
-        document.getElementById('btnSaveDoc').addEventListener('click', () => {
+        document.getElementById('btnSaveDoc').addEventListener('click', async () => {
             const type = docModalType;
             const clientName = document.getElementById('docClient').value.trim();
             const date = dateToTs(document.getElementById('docDate').value);
@@ -2619,44 +2768,57 @@
 
             if (!clientName) { toast('Saisissez le nom du client.', 'err'); return; }
             if (!lines.length) { toast('Ajoutez au moins une ligne avec une quantite et un prix.', 'err'); return; }
-            const docBeingEdited = docEditId ? (type === 'devis' ? findQuote(docEditId) : findInvoice(docEditId)) : null;
-            const consumed = {};
-            if (docBeingEdited) {
-                docBeingEdited.items.forEach(it => { consumed[it.productId] = (consumed[it.productId] || 0) + it.qty; });
-            }
-            if (type === 'facture') {
-                for (const it of lines) {
-                    const allowed = remainingExitQty(it.productId) + (consumed[it.productId] || 0);
-                    if (it.qty > allowed) {
-                        toast('Quantite insuffisante pour "' + it.name + '" : seule ' + allowed + ' disponible (sorties validees par le gerant).', 'err');
-                        return;
-                    }
-                }
-            }
-            const total = lines.reduce((s, it) => s + it.qty * it.price, 0);
 
-            if (docEditId) {
-                const doc = type === 'devis' ? findQuote(docEditId) : findInvoice(docEditId);
-                if (!doc) return;
-                const paid = doc.paid || 0;
-                if (type === 'facture' && total < paid) { toast('Le total ne peut pas etre inferieur au montant deja paye.', 'err'); return; }
-                Object.assign(doc, { clientName, date, items: lines, total });
-                if (type === 'facture') doc.status = undefined;
-                save(type === 'devis' ? STORE_QUOTES : STORE_INVOICES, type === 'devis' ? devis : factures);
-                logOp(type, type === 'devis' ? 'Modification devis' : 'Modification facture', (type === 'devis' ? 'Devis ' : 'Facture ') + doc.num + ' modifie.');
-                toast((type === 'devis' ? 'Devis ' : 'Facture ') + doc.num + ' modifie avec succes.', 'ok');
-            } else {
-                const num = nextDocNum(type === 'devis' ? 'DEV' : 'FACT', type === 'devis' ? devis : factures);
-                const doc = { id: uid(), num, clientName, date, items: lines, total, source: type };
-                if (type === 'facture') { doc.paid = 0; }
-                if (type === 'devis') { doc.status = 'envoye'; }
-                (type === 'devis' ? devis : factures).push(doc);
-                save(type === 'devis' ? STORE_QUOTES : STORE_INVOICES, type === 'devis' ? devis : factures);
-                if (type === 'facture') {
-                    lines.forEach(it => consumeValidatedExits(it.productId, it.qty));
+            try {
+                if (type === 'devis') {
+                    const payload = docEditId
+                        ? await apiFetch(`${API_BASE}/quotes.php?id=${encodeURIComponent(docEditId)}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ client_name: clientName, status: 'envoye', items: lines.map(it => ({ product_id: Number(it.productId), qty: it.qty, price: it.price, name: it.name })) })
+                        })
+                        : await apiFetch(`${API_BASE}/quotes.php`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ client_name: clientName, status: 'envoye', items: lines.map(it => ({ product_id: Number(it.productId), qty: it.qty, price: it.price, name: it.name })) })
+                        });
+                    toast(payload.message || 'Devis enregistre.', 'ok');
+                    await loadQuotes();
+                } else {
+                    const exitMap = (await apiFetch(`${API_BASE}/movements.php?action=validated-exits`)).data || [];
+                    const itemsForApi = lines.map(it => {
+                        const exit = exitMap.find(e => String(e.product_id || e.productId) === String(it.productId) && Number(e.remaining || (e.qty - e.used)) > 0);
+                        const qty = Math.min(it.qty, Number(exit ? (exit.remaining ?? (exit.qty - exit.used)) : 0));
+                        return {
+                            product_id: Number(it.productId),
+                            validated_exit_id: exit ? Number(exit.id) : null,
+                            name: it.name,
+                            qty,
+                            price: it.price
+                        };
+                    }).filter(it => it.validated_exit_id !== null && it.qty > 0);
+                    if (!itemsForApi.length) {
+                        throw new Error('Aucune sortie validee disponible pour les produits selectionnes.');
+                    }
+
+                    const payload = docEditId
+                        ? await apiFetch(`${API_BASE}/invoices.php?id=${encodeURIComponent(docEditId)}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ client_name: clientName, items: itemsForApi })
+                        })
+                        : await apiFetch(`${API_BASE}/invoices.php`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ client_name: clientName, items: itemsForApi })
+                        });
+                    toast(payload.message || 'Facture enregistree.', 'ok');
+                    await loadInvoices();
+                    await loadPayments();
+                    await loadValidatedExits();
                 }
-                logOp(type, type === 'devis' ? 'Creation devis' : 'Creation facture', (type === 'devis' ? 'Devis ' : 'Facture ') + num + (type === 'devis' ? ' cree pour ' : ' creee pour ') + clientName + '.');
-                toast((type === 'devis' ? 'Devis ' : 'Facture ') + num + ' enregistre avec succes.', 'ok');
+            } catch (error) {
+                toast(error.message || 'Erreur lors de l\'enregistrement.', 'err');
             }
             bootstrap.Modal.getInstance(document.getElementById('docModal')).hide();
             renderAll();
@@ -2665,36 +2827,23 @@
         document.getElementById('docForm').addEventListener('submit', e => { e.preventDefault(); document.getElementById('btnSaveDoc').click(); });
 
         /* ---------- Transformer un devis en facture ---------- */
-        function convertQuote(id) {
+        async function convertQuote(id) {
             const q = findQuote(id);
             if (!q) return;
-            for (const it of q.items) {
-                const avail = remainingExitQty(it.productId);
-                if (it.qty > avail) {
-                    toast('Conversion impossible pour "' + it.name + '" : seule ' + avail + ' disponible (sorties validees par le gerant).', 'err');
-                    return;
-                }
+            try {
+                const payload = await apiFetch(`${API_BASE}/quotes.php?action=convert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: Number(id) })
+                });
+                toast(payload.message || 'Devis converti en facture.', 'ok');
+                await loadQuotes();
+                await loadInvoices();
+                await loadValidatedExits();
+                renderAll();
+            } catch (error) {
+                toast(error.message || 'Conversion impossible.', 'err');
             }
-            const num = nextDocNum('FACT', factures);
-            const inv = {
-                id: uid(),
-                num,
-                clientName: docClientName(q) || '',
-                date: Date.now(),
-                items: q.items.map(it => Object.assign({}, it)),
-                total: q.total,
-                paid: 0,
-                source: 'devis'
-            };
-            factures.unshift(inv);
-            save(STORE_INVOICES, factures);
-            q.items.forEach(it => consumeValidatedExits(it.productId, it.qty));
-            q.status = 'facture';
-            q.invoiceId = inv.id;
-            save(STORE_QUOTES, devis);
-            logOp('facture', 'Devis transforme', 'Le devis ' + q.num + ' a ete transforme en facture ' + num + '.');
-            toast('Le devis ' + q.num + ' a ete transforme en facture ' + num + '.', 'ok');
-            renderAll();
         }
 
         /* ---------- Suppression document ---------- */
@@ -2707,21 +2856,24 @@
             bootstrap.Modal.getOrCreateInstance(document.getElementById('docDeleteModal')).show();
         }
 
-        document.getElementById('btnConfirmDelDoc').addEventListener('click', () => {
+        document.getElementById('btnConfirmDelDoc').addEventListener('click', async () => {
             if (!deleteDocId) return;
             const doc = deleteDocType === 'devis' ? findQuote(deleteDocId) : findInvoice(deleteDocId);
-            if (deleteDocType === 'devis') {
-                devis = devis.filter(d => d.id !== deleteDocId);
-                save(STORE_QUOTES, devis);
-            } else {
-                factures = factures.filter(f => f.id !== deleteDocId);
-                payments = payments.filter(p => p.invoiceId !== deleteDocId);
-                save(STORE_INVOICES, factures);
-                save(STORE_PAYMENTS, payments);
+            try {
+                if (deleteDocType === 'devis') {
+                    const payload = await apiFetch(`${API_BASE}/quotes.php?id=${encodeURIComponent(deleteDocId)}`, { method: 'DELETE' });
+                    toast(payload.message || 'Devis supprime.', 'ok');
+                    await loadQuotes();
+                } else {
+                    const payload = await apiFetch(`${API_BASE}/invoices.php?id=${encodeURIComponent(deleteDocId)}`, { method: 'DELETE' });
+                    toast(payload.message || 'Facture supprimee.', 'ok');
+                    await loadInvoices();
+                    await loadPayments();
+                }
+            } catch (error) {
+                toast(error.message || 'Erreur lors de la suppression.', 'err');
             }
-            logOp(deleteDocType, deleteDocType === 'devis' ? 'Suppression devis' : 'Suppression facture', (deleteDocType === 'devis' ? 'Devis ' : 'Facture ') + doc.num + ' supprime.');
             bootstrap.Modal.getInstance(document.getElementById('docDeleteModal')).hide();
-            toast((deleteDocType === 'devis' ? 'Devis ' : 'Facture ') + doc.num + ' supprime.', 'ok');
             deleteDocId = null;
             renderAll();
         });
@@ -3081,7 +3233,7 @@
             fillPayClient();
         });
 
-        document.getElementById('btnSavePay').addEventListener('click', () => {
+        document.getElementById('btnSavePay').addEventListener('click', async () => {
             const invoiceId = document.getElementById('payInvoice').value;
             const clientName = document.getElementById('payClient').value.trim();
             const amount = Number(document.getElementById('payAmount').value) || 0;
@@ -3094,13 +3246,19 @@
             if (amount <= 0) { toast('Le montant doit etre superieur a 0.', 'err'); return; }
             if (amount > rest) { toast('Le montant depasse le reste a payer (' + fmtMoney(rest) + ').', 'err'); return; }
 
-            payments.push({ id: uid(), invoiceId, date, amount, method, clientName });
-            save(STORE_PAYMENTS, payments);
-            f.paid = f.paid + amount;
-            save(STORE_INVOICES, factures);
-            logOp('paiement', 'Paiement encaisse', 'Paiement de ' + fmtMoney(amount) + ' (' + method + ') de ' + clientName + ' sur ' + f.num + '.');
+            try {
+                const payload = await apiFetch(`${API_BASE}/payments.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ invoice_id: Number(invoiceId), amount, method })
+                });
+                toast(payload.message || 'Paiement encaisse.', 'ok');
+                await loadInvoices();
+                await loadPayments();
+            } catch (error) {
+                toast(error.message || 'Erreur lors de l\'encaissement.', 'err');
+            }
             bootstrap.Modal.getInstance(document.getElementById('payModal')).hide();
-            toast('Paiement de ' + fmtMoney(amount) + ' enregistre sur ' + f.num + ' pour ' + clientName + '.', 'ok');
             renderAll();
         });
 
@@ -3189,35 +3347,46 @@
         document.getElementById('repMonth').addEventListener('input', renderRapports);
 
         /* ---------- Parametres (profil & mot de passe) ---------- */
-        document.getElementById('btnSaveProfile').addEventListener('click', () => {
+        document.getElementById('btnSaveProfile').addEventListener('click', async () => {
             const name = document.getElementById('setName').value.trim();
             const email = document.getElementById('setEmail').value.trim();
             if (!name) { toast('Le nom complet est obligatoire.', 'err'); return; }
             if (!email) { toast("L'email est obligatoire.", 'err'); return; }
-            profile.name = name;
-            profile.email = email;
-            saveProfile();
-            renderSettings();
-            logOp('parametre', 'Modification profil', 'Profil mis a jour (' + name + ').');
-            toast('Profil mis a jour avec succes.', 'ok');
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email })
+                });
+                profile = payload.data || { ...profile, name, email };
+                saveProfile();
+                renderSettings();
+                toast(payload.message || 'Profil mis a jour avec succes.', 'ok');
+            } catch (error) {
+                toast(error.message || 'Erreur lors de la mise a jour du profil.', 'err');
+            }
         });
 
-        document.getElementById('btnChangePwd').addEventListener('click', () => {
+        document.getElementById('btnChangePwd').addEventListener('click', async () => {
             const cur = document.getElementById('setCurrentPwd').value;
             const np = document.getElementById('setNewPwd').value;
             const cp = document.getElementById('setConfirmPwd').value;
             if (!cur) { toast('Saisissez votre mot de passe actuel.', 'err'); return; }
-            if (cur !== profile.password) { toast('Le mot de passe actuel est incorrect.', 'err'); return; }
             if (!np || np.length < 4) { toast('Le nouveau mot de passe doit contenir au moins 4 caracteres.', 'err'); return; }
             if (np !== cp) { toast('Les deux nouveaux mots de passe ne correspondent pas.', 'err'); return; }
-            if (np === profile.password) { toast('Le nouveau mot de passe est identique a l actuel.', 'err'); return; }
-            profile.password = np;
-            saveProfile();
-            document.getElementById('setCurrentPwd').value = '';
-            document.getElementById('setNewPwd').value = '';
-            document.getElementById('setConfirmPwd').value = '';
-            logOp('parametre', 'Mot de passe modifie', 'Identifiants mis a jour dans la section parametres.');
-            toast('Mot de passe mis a jour avec succes.', 'ok');
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php?action=pwd`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password: cur, new_password: np })
+                });
+                document.getElementById('setCurrentPwd').value = '';
+                document.getElementById('setNewPwd').value = '';
+                document.getElementById('setConfirmPwd').value = '';
+                toast(payload.message || 'Mot de passe mis a jour avec succes.', 'ok');
+            } catch (error) {
+                toast(error.message || 'Erreur de mot de passe.', 'err');
+            }
         });
 
         /* ---------- Toasts ---------- */
@@ -3236,13 +3405,23 @@
         }
 
         /* ---------- Init ---------- */
-        seedData();
-        loadProfile();
-        (function initSaleLines() {
-            if (products.length) addSaleLine();
-            computeSaleTotal();
-        })();
-        showView(getSectionFromUrl());
+        async function initDashboard() {
+            await loadProducts();
+            await loadValidatedExits();
+            await loadQuotes();
+            await loadInvoices();
+            await loadPayments();
+            await loadProfile();
+            await loadOperations();
+            seedData();
+            (function initSaleLines() {
+                if (products.length) addSaleLine();
+                computeSaleTotal();
+            })();
+            showView(getSectionFromUrl());
+        }
+
+        initDashboard();
     </script>
 
 </body>

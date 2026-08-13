@@ -1348,6 +1348,7 @@
         const STORE_MOVES = 'emarket_stock_moves';
         const STORE_PROFILE = 'emarket_stock_profile';
         const STORE_VALIDATED_EXITS = 'emarket_caissier_sorties_validees';
+        const API_BASE = '../backend/api';
         const DEFAULT_PROFILE = { name: 'Gérant de stock', email: 'gerant@emarket.com', role: 'Gérant de stock', password: '123456' };
 
         const PAGES = {
@@ -1369,29 +1370,102 @@
         let deleteId = null;
         let editId = null;
 
+        async function apiFetch(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.success === false) {
+                throw new Error(payload.message || 'Erreur API');
+            }
+            return payload;
+        }
+
+        function normalizeProduct(p) {
+            return {
+                id: String(p.id),
+                name: p.name,
+                ref: p.ref || '',
+                cat: p.cat || p.category_name || '',
+                unit: p.unit || 'unite',
+                min: Number(p.min || p.min_qty || 0),
+                buy: Number(p.buy || p.buy_price || 0),
+                sell: Number(p.sell || p.sell_price || 0),
+                qty: Number(p.qty || 0),
+                createdAt: Number(p.createdAt || p.created_at || Date.now())
+            };
+        }
+
+        function normalizeMove(m) {
+            return {
+                id: String(m.id),
+                productId: String(m.product_id || m.productId),
+                type: m.type,
+                qty: Number(m.qty || 0),
+                reason: m.reason || '',
+                balance: Number(m.balance || 0),
+                date: Number(m.createdAt || m.date || Date.now()),
+                user: m.user || '',
+                product_name: m.product_name || ''
+            };
+        }
+
+        function normalizeValidatedExit(e) {
+            return {
+                id: String(e.id),
+                moveId: String(e.move_id || e.moveId),
+                productId: String(e.product_id || e.productId),
+                qty: Number(e.qty || 0),
+                used: Number(e.used || 0),
+                reason: e.reason || '',
+                date: Number(e.createdAt || e.date || Date.now())
+            };
+        }
+
         /* ---------- Persistance ---------- */
-        function loadProducts() {
-            try { products = JSON.parse(localStorage.getItem(STORE_PRODUCTS)) || []; }
-            catch (e) { products = []; }
+        async function loadProducts() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/products.php`);
+                products = Array.isArray(payload.data) ? payload.data.map(normalizeProduct) : [];
+                saveProducts();
+            } catch (e) {
+                try { products = JSON.parse(localStorage.getItem(STORE_PRODUCTS)) || []; }
+                catch (err) { products = []; }
+            }
         }
 
         function saveProducts() {
             localStorage.setItem(STORE_PRODUCTS, JSON.stringify(products));
         }
 
-        function loadMoves() {
-            try { moves = JSON.parse(localStorage.getItem(STORE_MOVES)) || []; }
-            catch (e) { moves = []; }
+        async function loadMoves() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/movements.php`);
+                moves = Array.isArray(payload.data) ? payload.data.map(normalizeMove) : [];
+                saveMoves();
+            } catch (e) {
+                try { moves = JSON.parse(localStorage.getItem(STORE_MOVES)) || []; }
+                catch (err) { moves = []; }
+            }
         }
 
         function saveMoves() {
             localStorage.setItem(STORE_MOVES, JSON.stringify(moves));
         }
 
-        function loadValidatedExits() {
-            try { validatedExits = JSON.parse(localStorage.getItem(STORE_VALIDATED_EXITS)) || []; }
-            catch (e) { validatedExits = []; }
-            return validatedExits;
+        async function loadValidatedExits() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/movements.php?action=validated-exits`);
+                validatedExits = Array.isArray(payload.data) ? payload.data.map(normalizeValidatedExit) : [];
+                saveValidatedExits();
+                return validatedExits;
+            } catch (e) {
+                try { validatedExits = JSON.parse(localStorage.getItem(STORE_VALIDATED_EXITS)) || []; }
+                catch (err) { validatedExits = []; }
+                return validatedExits;
+            }
         }
 
         function saveValidatedExits() {
@@ -1406,12 +1480,21 @@
 
         let profile = null;
 
-        function loadProfile() {
-            try { profile = JSON.parse(localStorage.getItem(STORE_PROFILE)) || null; }
-            catch (e) { profile = null; }
-            if (!profile || !profile.name) {
-                profile = Object.assign({}, DEFAULT_PROFILE);
+        async function loadProfile() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php`);
+                profile = payload.data || Object.assign({}, DEFAULT_PROFILE);
+                if (!profile.role) profile.role = DEFAULT_PROFILE.role;
                 saveProfile();
+                return profile;
+            } catch (e) {
+                try { profile = JSON.parse(localStorage.getItem(STORE_PROFILE)) || null; }
+                catch (err) { profile = null; }
+                if (!profile || !profile.name) {
+                    profile = Object.assign({}, DEFAULT_PROFILE);
+                    saveProfile();
+                }
+                return profile;
             }
         }
 
@@ -1820,7 +1903,7 @@
         document.getElementById('btnAddProduct').addEventListener('click', () => openProductModal(null));
         document.getElementById('btnSaveProduct').addEventListener('click', saveProduct);
 
-        function saveProduct() {
+        async function saveProduct() {
             const name = document.getElementById('pfName').value.trim();
             if (!name) { toast('Le nom du produit est obligatoire.', 'err'); return; }
 
@@ -1834,21 +1917,38 @@
                 sell: Number(document.getElementById('pfSell').value) || 0
             };
 
-            if (editId) {
-                const p = findProduct(editId);
-                Object.assign(p, data);
-                saveProducts();
-                toast('Produit "' + name + '" modifie avec succes.', 'ok');
-            } else {
-                const qty = Math.max(0, Number(document.getElementById('pfInitQty').value) || 0);
-                const p = { id: uid(), ...data, qty, createdAt: Date.now() };
-                products.push(p);
-                saveProducts();
-                if (qty > 0) {
-                    moves.push({ id: uid(), date: Date.now(), productId: p.id, type: 'in', qty, reason: 'Stock initial', balance: qty });
-                    saveMoves();
+            try {
+                if (editId) {
+                    const payload = await apiFetch(`${API_BASE}/products.php?id=${encodeURIComponent(editId)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const p = findProduct(editId);
+                    if (p) Object.assign(p, { ...p, ...data });
+                    toast(payload.message || 'Produit modifie avec succes.', 'ok');
+                } else {
+                    const qty = Math.max(0, Number(document.getElementById('pfInitQty').value) || 0);
+                    const payload = await apiFetch(`${API_BASE}/products.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...data, qty })
+                    });
+                    const newId = String(payload.data?.id ?? uid());
+                    const p = normalizeProduct({ id: newId, ...data, qty, createdAt: Date.now() });
+                    products.unshift(p);
+                    if (qty > 0) {
+                        moves.unshift({ id: uid(), date: Date.now(), productId: newId, type: 'in', qty, reason: 'Stock initial', balance: qty });
+                        saveMoves();
+                    }
+                    toast(payload.message || 'Produit ajoute au catalogue.', 'ok');
                 }
-                toast('Produit "' + name + '" ajoute au catalogue.', 'ok');
+                saveProducts();
+                await loadProducts();
+                await loadMoves();
+                await loadValidatedExits();
+            } catch (error) {
+                toast(error.message || 'Erreur lors de l\'enregistrement.', 'err');
             }
             bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
             renderAll();
@@ -1865,16 +1965,24 @@
             bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
         }
 
-        document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+        document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
             if (!deleteId) return;
             const p = findProduct(deleteId);
-            products = products.filter(x => x.id !== deleteId);
-            moves = moves.filter(m => m.productId !== deleteId);
-            saveProducts();
-            saveMoves();
+            try {
+                const payload = await apiFetch(`${API_BASE}/products.php?id=${encodeURIComponent(deleteId)}`, { method: 'DELETE' });
+                products = products.filter(x => x.id !== deleteId);
+                moves = moves.filter(m => m.productId !== deleteId);
+                saveProducts();
+                saveMoves();
+                toast(payload.message || 'Produit supprime.', 'ok');
+            } catch (error) {
+                toast(error.message || 'Erreur lors de la suppression.', 'err');
+            }
             bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-            toast('Produit "' + p.name + '" supprime.', 'ok');
             deleteId = null;
+            await loadProducts();
+            await loadMoves();
+            await loadValidatedExits();
             renderAll();
         });
 
@@ -1895,7 +2003,7 @@
             }, 60);
         }
 
-        function doMove(type) {
+        async function doMove(type) {
             const selId = document.getElementById(type === 'in' ? 'entryProduct' : 'exitProduct').value;
             const qty = Number(document.getElementById(type === 'in' ? 'entryQty' : 'exitQty').value);
             const reason = document.getElementById(type === 'in' ? 'entryReason' : 'exitReason').value.trim();
@@ -1912,57 +2020,74 @@
                 return;
             }
 
-            const newQty = type === 'in' ? p.qty + qty : p.qty - qty;
-            p.qty = newQty;
-            saveProducts();
+            try {
+                const payload = await apiFetch(`${API_BASE}/products.php?action=${type === 'in' ? 'entry' : 'exit'}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: Number(selId), qty, reason })
+                });
 
-            const move = { id: uid(), date: Date.now(), productId: p.id, type, qty, reason, balance: newQty };
-            moves.push(move);
-            saveMoves();
+                const newQty = type === 'in' ? p.qty + qty : p.qty - qty;
+                p.qty = newQty;
+                saveProducts();
 
-            if (type === 'out') {
-                validatedExits.push({ id: uid(), moveId: move.id, productId: p.id, qty, reason, date: move.date, used: 0 });
-                saveValidatedExits();
+                document.getElementById(type === 'in' ? 'entryReason' : 'exitReason').value = '';
+                document.getElementById(type === 'in' ? 'entryQty' : 'exitQty').value = 1;
+
+                toast(payload.message || ((type === 'in' ? 'Entree' : 'Sortie validee') + ' enregistree.'), 'ok');
+                await loadProducts();
+                await loadMoves();
+                await loadValidatedExits();
+                renderAll();
+            } catch (error) {
+                toast(error.message || 'Erreur lors du mouvement.', 'err');
             }
-
-            document.getElementById(type === 'in' ? 'entryReason' : 'exitReason').value = '';
-            document.getElementById(type === 'in' ? 'entryQty' : 'exitQty').value = 1;
-
-            toast((type === 'in' ? 'Entree' : 'Sortie validee') + ' enregistree : +' + (type === 'in' ? '' : '-') + qty + ' ' + (p.unit || 'unite') + ' pour "' + p.name + '".' + (type === 'out' ? ' La sortie est facturable chez le caissier.' : ''), 'ok');
-            renderAll();
         }
 
         document.getElementById('entryForm').addEventListener('submit', e => { e.preventDefault(); doMove('in'); });
         document.getElementById('exitForm').addEventListener('submit', e => { e.preventDefault(); doMove('out'); });
 
         /* ---------- Parametres (profil & mot de passe) ---------- */
-        document.getElementById('btnSaveProfile').addEventListener('click', () => {
+        document.getElementById('btnSaveProfile').addEventListener('click', async () => {
             const name = document.getElementById('setName').value.trim();
             const email = document.getElementById('setEmail').value.trim();
             if (!name) { toast('Le nom complet est obligatoire.', 'err'); return; }
             if (!email) { toast("L'email est obligatoire.", 'err'); return; }
-            profile.name = name;
-            profile.email = email;
-            saveProfile();
-            renderSettings();
-            toast('Profil mis a jour avec succes.', 'ok');
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email })
+                });
+                profile = payload.data || { ...profile, name, email };
+                saveProfile();
+                renderSettings();
+                toast(payload.message || 'Profil mis a jour avec succes.', 'ok');
+            } catch (error) {
+                toast(error.message || 'Erreur lors de la mise a jour du profil.', 'err');
+            }
         });
 
-        document.getElementById('btnChangePwd').addEventListener('click', () => {
+        document.getElementById('btnChangePwd').addEventListener('click', async () => {
             const cur = document.getElementById('setCurrentPwd').value;
             const np = document.getElementById('setNewPwd').value;
             const cp = document.getElementById('setConfirmPwd').value;
             if (!cur) { toast('Saisissez votre mot de passe actuel.', 'err'); return; }
-            if (cur !== profile.password) { toast('Le mot de passe actuel est incorrect.', 'err'); return; }
             if (!np || np.length < 4) { toast('Le nouveau mot de passe doit contenir au moins 4 caracteres.', 'err'); return; }
             if (np !== cp) { toast('Les deux nouveaux mots de passe ne correspondent pas.', 'err'); return; }
-            if (np === profile.password) { toast('Le nouveau mot de passe est identique a l actuel.', 'err'); return; }
-            profile.password = np;
-            saveProfile();
-            document.getElementById('setCurrentPwd').value = '';
-            document.getElementById('setNewPwd').value = '';
-            document.getElementById('setConfirmPwd').value = '';
-            toast('Mot de passe mis a jour avec succes.', 'ok');
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php?action=pwd`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password: cur, new_password: np })
+                });
+                document.getElementById('setCurrentPwd').value = '';
+                document.getElementById('setNewPwd').value = '';
+                document.getElementById('setConfirmPwd').value = '';
+                toast(payload.message || 'Mot de passe mis a jour avec succes.', 'ok');
+            } catch (error) {
+                toast(error.message || 'Erreur de mot de passe.', 'err');
+            }
         });
 
         /* ---------- Toasts ---------- */
@@ -1981,12 +2106,16 @@
         }
 
         /* ---------- Init ---------- */
-        loadProducts();
-        loadMoves();
-        loadValidatedExits();
-        loadProfile();
-        seedData();
-        showView(getSectionFromUrl());
+        async function initDashboard() {
+            await loadProducts();
+            await loadMoves();
+            await loadValidatedExits();
+            await loadProfile();
+            seedData();
+            showView(getSectionFromUrl());
+        }
+
+        initDashboard();
     </script>
 
 </body>

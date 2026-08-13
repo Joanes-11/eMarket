@@ -495,11 +495,80 @@
     </div>
 
     <script>
-        const loginForm = document.getElementById('loginForm');
+        const AUTH_URL = '../backend/api/auth.php';
+        const DASHBOARDS = {
+            'Administrateur': 'dashboard-admin.html',
+            'Gérant de stock': 'dashboard-stock.html',
+            'Caissier': 'dashboard-caissier.html'
+        };
 
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert('Connexion reussie (page de demonstration)');
+        async function redirectByRole(role) {
+            const page = DASHBOARDS[role] || 'dashboard-admin.html';
+            window.location.href = page;
+        }
+
+        async function getCurrentUser() {
+            const response = await fetch(AUTH_URL + '?action=me', { method: 'GET', credentials: 'same-origin' });
+            const payload = await response.json().catch(() => ({}));
+            if (response.ok && payload.success && payload.data) {
+                return payload.data;
+            }
+            return null;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loginForm = document.getElementById('loginForm');
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+
+            try {
+                const user = await getCurrentUser();
+                if (user && user.role) {
+                    // Si une session existe, ne pas rediriger automatiquement.
+                    // Afficher une bannière informative et pré-remplir le champ utilisateur.
+                    const info = document.createElement('div');
+                    info.style = 'background:#fff4ce;border:1px solid #ffe58f;padding:12px;border-radius:8px;margin-bottom:15px;color:#8a6d00;font-weight:600;text-align:center;';
+                    info.innerHTML = `Vous êtes déjà connecté en tant que <strong>${user.name || user.email || ''}</strong>. Cliquez sur "Se connecter" pour accéder au tableau de bord ou déconnectez-vous d'abord.`;
+                    loginForm.prepend(info);
+                    const usernameInput = document.getElementById('username');
+                    if (usernameInput) usernameInput.value = user.email || user.name || '';
+                }
+            } catch (error) {
+                // Pas de session active : on reste sur la page de connexion.
+            }
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
+
+                if (!username || !password) {
+                    alert('Veuillez saisir votre nom d\'utilisateur et votre mot de passe.');
+                    return;
+                }
+
+                submitButton.disabled = true;
+                submitButton.textContent = 'Connexion...';
+
+                try {
+                    const response = await fetch(AUTH_URL + '?action=login', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok || !payload.success) {
+                        throw new Error(payload.message || 'Erreur de connexion.');
+                    }
+
+                    await redirectByRole(payload.data.role);
+                } catch (error) {
+                    alert(error.message || 'Erreur de connexion.');
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Se connecter';
+                }
+            });
         });
     </script>
 </body>

@@ -376,16 +376,16 @@
                     de votre espace de gestion eMarket ?
                 </p>
 
-                <div class="session-note">
+                <div class="session-note" id="sessionNote">
                     <i class="fa-solid fa-circle-user"></i>
-                    Session : Gestionnaire de stock
+                    Session : Vérification...
                 </div>
 
-                <a href="Connexion.html" class="btn-logout">
+                <a href="Connexion.html" class="btn-logout" id="logoutButton">
                     <i class="fa-solid fa-right-from-bracket"></i> Oui, me deconnecter
                 </a>
 
-                <a href="dashboard-stock.html" class="btn-cancel">
+                <a href="dashboard-stock.html" class="btn-cancel" id="cancelLogout">
                     <i class="fa-solid fa-arrow-left"></i> Non, rester connecte
                 </a>
             </div>
@@ -394,6 +394,69 @@
 
     </div>
 
+    <script>
+        const AUTH_URL = '../backend/api/auth.php';
+        const DASHBOARDS = {
+            'Administrateur': 'dashboard-admin.html',
+            'Gérant de stock': 'dashboard-stock.html',
+            'Caissier': 'dashboard-caissier.html'
+        };
+
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch(AUTH_URL + '?action=me', { method: 'GET', credentials: 'same-origin' });
+                const payload = await response.json().catch(() => ({}));
+                if (response.ok && payload.success && payload.data) {
+                    return payload.data;
+                }
+            } catch (error) {
+                // aucune session active
+            }
+            return null;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const sessionNote = document.getElementById('sessionNote');
+            const logoutButton = document.getElementById('logoutButton');
+            const cancelLogout = document.getElementById('cancelLogout');
+            const dashboardLink = document.querySelector('.back-home');
+
+            const user = await loadCurrentUser();
+            if (!user) {
+                window.location.href = 'Connexion.html';
+                return;
+            }
+
+            sessionNote.innerHTML = '<i class="fa-solid fa-circle-user"></i> Session : ' + user.name + ' (' + user.role + ')';
+            if (dashboardLink) {
+                dashboardLink.href = DASHBOARDS[user.role] || 'dashboard-admin.html';
+            }
+            if (cancelLogout) {
+                cancelLogout.href = DASHBOARDS[user.role] || 'dashboard-admin.html';
+            }
+
+            logoutButton.addEventListener('click', async (event) => {
+                event.preventDefault();
+                logoutButton.disabled = true;
+                logoutButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Déconnexion...';
+
+                try {
+                    const response = await fetch(AUTH_URL + '?action=logout', {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok && !payload.success) {
+                        console.warn(payload.message || 'Déconnexion partielle.');
+                    }
+                } catch (error) {
+                    console.warn('Déconnexion hors ligne :', error);
+                }
+
+                window.location.href = 'Connexion.html';
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -1419,6 +1419,7 @@
         const STORE_PRODUCTS = 'emarket_stock_products';
         const STORE_CATEGORIES = 'emarket_admin_categories';
         const STORE_PROFILE = 'emarket_admin_profile';
+        const API_BASE = '../backend/api';
         const DEFAULT_PWD = '123456';
         const USERS_VERSION = 2;
         const ROLES = ['Administrateur', 'Gérant de stock', 'Caissier'];
@@ -1505,6 +1506,65 @@
             return list.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         }
 
+        async function apiFetch(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.success === false) {
+                throw new Error(payload.message || 'Erreur API');
+            }
+            return payload;
+        }
+
+        async function getCurrentUser() {
+            try {
+                const resp = await fetch(`${API_BASE}/auth.php?action=me`, { method: 'GET', credentials: 'same-origin' });
+                const p = await resp.json().catch(() => ({}));
+                if (resp.ok && p.success && p.data) return p.data;
+            } catch (e) {}
+            return null;
+        }
+
+        function normalizeUser(u) {
+            return {
+                id: String(u.id),
+                name: u.name,
+                email: u.email,
+                role: u.role,
+                active: !!u.active,
+                password: u.password || DEFAULT_PWD,
+                createdAt: Number(u.createdAt || Date.now())
+            };
+        }
+
+        function normalizeCategory(c) {
+            return {
+                id: String(c.id),
+                name: c.name,
+                desc: c.description || c.desc || '',
+                count: Number(c.count || 0),
+                createdAt: Number(c.createdAt || Date.now())
+            };
+        }
+
+        function normalizeProduct(p) {
+            return {
+                id: String(p.id),
+                name: p.name,
+                ref: p.ref || '',
+                cat: p.cat || p.category_name || '',
+                unit: p.unit || 'unite',
+                min: Number(p.min || p.min_qty || 0),
+                buy: Number(p.buy || p.buy_price || 0),
+                sell: Number(p.sell || p.sell_price || 0),
+                qty: Number(p.qty || 0),
+                createdAt: Number(p.createdAt || p.created_at || Date.now())
+            };
+        }
+
         /* ============================================================
            UTILISATEURS
            ============================================================ */
@@ -1517,17 +1577,29 @@
             localStorage.setItem(STORE_USERS, JSON.stringify(users));
         }
 
+        async function loadUsersFromApi() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/users.php`);
+                users = Array.isArray(payload.data) ? payload.data.map(normalizeUser) : [];
+                saveUsers(users);
+                return users;
+            } catch (e) {
+                users = loadUsers();
+                if (!users.length) {
+                    const now = Date.now();
+                    users = [
+                        { id: uid(), name: 'Administrateur', email: 'admin@emarket.com', role: 'Administrateur', active: true, password: DEFAULT_PWD, createdAt: now - 3 },
+                        { id: uid(), name: 'Gérant de stock', email: 'gerant@emarket.com', role: 'Gérant de stock', active: true, password: DEFAULT_PWD, createdAt: now - 2 },
+                        { id: uid(), name: 'Caissier', email: 'caissier@emarket.com', role: 'Caissier', active: true, password: DEFAULT_PWD, createdAt: now - 1 }
+                    ];
+                    saveUsers(users);
+                }
+                return users;
+            }
+        }
+
         function seedUsers() {
-            let u = loadUsers();
-            if (u.length) return u;
-            const now = Date.now();
-            u = [
-                { id: uid(), name: 'Administrateur', email: 'admin@emarket.com', role: 'Administrateur', active: true, password: DEFAULT_PWD, createdAt: now - 3 },
-                { id: uid(), name: 'Gérant de stock', email: 'gerant@emarket.com', role: 'Gérant de stock', active: true, password: DEFAULT_PWD, createdAt: now - 2 },
-                { id: uid(), name: 'Caissier', email: 'caissier@emarket.com', role: 'Caissier', active: true, password: DEFAULT_PWD, createdAt: now - 1 }
-            ];
-            saveUsers(u);
-            return u;
+            return loadUsers();
         }
 
         (function migrateUsers() {
@@ -1579,6 +1651,24 @@
 
         function activityRows() {
             try { return JSON.parse(localStorage.getItem(STORE_ACTIVITY)) || []; } catch (e) { return []; }
+        }
+
+        async function fetchActivity() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/activity.php?limit=50`);
+                const list = Array.isArray(payload.data) ? payload.data : [];
+                const mapped = list.map(item => ({
+                    id: String(item.id),
+                    date: Number(item.createdAt || Date.now()),
+                    user: item.user_name || 'Système',
+                    action: item.action || '',
+                    detail: item.detail || ''
+                }));
+                localStorage.setItem(STORE_ACTIVITY, JSON.stringify(mapped));
+                return mapped;
+            } catch (e) {
+                return activityRows();
+            }
         }
 
         function seedActivity() {
@@ -1635,7 +1725,7 @@
             if (!e.target.checked) pwd.focus();
         });
 
-        document.getElementById('usersBody').addEventListener('click', e => {
+        document.getElementById('usersBody').addEventListener('click', async e => {
             const btn = e.target.closest('.icon-btn');
             if (!btn) return;
             const id = btn.getAttribute('data-edit') || btn.getAttribute('data-del') || btn.getAttribute('data-reset') || btn.getAttribute('data-toggle');
@@ -1660,11 +1750,20 @@
                 document.getElementById('pwNewPassword').required = false;
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('passwordModal')).show();
             } else if (btn.hasAttribute('data-toggle')) {
-                user.active = !user.active;
-                saveUsers(users);
-                logActivity(currentAdminName(), user.active ? 'Activation compte' : 'Desactivation compte', 'Compte de ' + user.name);
-                renderUsers(); renderActivity();
-                toast('Compte ' + (user.active ? 'active' : 'desactive') + ' : ' + user.name, 'ok');
+                try {
+                    const payload = await apiFetch(`${API_BASE}/users.php?action=toggle`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: Number(user.id) })
+                    });
+                    await loadUsersFromApi();
+                    renderUsers();
+                    await fetchActivity();
+                    renderActivity();
+                    toast(payload.message || 'Compte mis a jour.', 'ok');
+                } catch (e) {
+                    toast(e.message || 'Erreur lors du changement de statut.', 'err');
+                }
             } else if (btn.hasAttribute('data-del')) {
                 deleteContext = { type: 'user', id: user.id, name: user.name };
                 document.getElementById('deleteModalTitle').textContent = 'Supprimer un utilisateur';
@@ -1673,27 +1772,37 @@
             }
         });
 
-        document.getElementById('btnSaveUser').addEventListener('click', () => {
+        document.getElementById('btnSaveUser').addEventListener('click', async () => {
             const name = document.getElementById('ufName').value.trim();
             const email = document.getElementById('ufEmail').value.trim();
             const role = document.getElementById('ufRole').value;
             if (!name || !email || !role) { toast('Veuillez remplir tous les champs obligatoires.', 'err'); return; }
-            if (editingUserId) {
-                const u = users.find(x => x.id === editingUserId);
-                u.name = name; u.email = email; u.role = role;
-                logActivity(currentAdminName(), 'Modification utilisateur', 'Compte de ' + name);
-                toast('Utilisateur modifie avec succes.', 'ok');
-            } else {
-                const useDefault = document.getElementById('ufDefaultPwd').checked;
-                const password = useDefault ? DEFAULT_PWD : document.getElementById('ufPassword').value.trim();
-                if (!password) { toast('Veuillez saisir un mot de passe.', 'err'); return; }
-                users.push({ id: uid(), name, email, role, active: true, password, createdAt: Date.now() });
-                logActivity(currentAdminName(), 'Creation utilisateur', 'Compte de ' + name);
-                toast('Utilisateur cree avec succes.', 'ok');
+            try {
+                if (editingUserId) {
+                    const payload = await apiFetch(`${API_BASE}/users.php?id=${encodeURIComponent(editingUserId)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, role })
+                    });
+                    toast(payload.message || 'Utilisateur modifie avec succes.', 'ok');
+                } else {
+                    const useDefault = document.getElementById('ufDefaultPwd').checked;
+                    const password = useDefault ? DEFAULT_PWD : document.getElementById('ufPassword').value.trim();
+                    if (!password) { toast('Veuillez saisir un mot de passe.', 'err'); return; }
+                    const payload = await apiFetch(`${API_BASE}/users.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, role, password })
+                    });
+                    toast(payload.message || 'Utilisateur cree avec succes.', 'ok');
+                }
+                await loadUsersFromApi();
+                await fetchActivity();
+                renderUsers(); renderActivity();
+                bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+            } catch (e) {
+                toast(e.message || 'Erreur utilisateur.', 'err');
             }
-            saveUsers(users);
-            renderUsers(); renderActivity();
-            bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
         });
 
         /* ---------- Reinitialisation mot de passe ---------- */
@@ -1704,19 +1813,28 @@
             if (!e.target.checked) document.getElementById('pwNewPassword').focus();
         });
 
-        document.getElementById('btnSavePassword').addEventListener('click', () => {
+        document.getElementById('btnSavePassword').addEventListener('click', async () => {
             const id = document.getElementById('pwUserId').value;
             const u = users.find(x => x.id === id);
             if (!u) return;
             const useDefault = document.getElementById('pwDefault').checked;
             const newPwd = useDefault ? DEFAULT_PWD : document.getElementById('pwNewPassword').value.trim();
             if (!newPwd) { toast('Veuillez saisir le nouveau mot de passe.', 'err'); return; }
-            u.password = newPwd;
-            saveUsers(users);
-            logActivity(currentAdminName(), 'Reinitialisation mot de passe', 'Compte de ' + u.name);
-            renderUsers(); renderActivity();
-            bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
-            toast('Mot de passe reinitialise pour ' + u.name, 'ok');
+            try {
+                const payload = await apiFetch(`${API_BASE}/users.php?action=resetpwd`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: Number(id), password: newPwd })
+                });
+                await loadUsersFromApi();
+                renderUsers();
+                await fetchActivity();
+                renderActivity();
+                bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+                toast(payload.message || 'Mot de passe reinitialise pour ' + u.name, 'ok');
+            } catch (e) {
+                toast(e.message || 'Erreur lors de la reinitialisation.', 'err');
+            }
         });
 
         /* ============================================================
@@ -1731,24 +1849,32 @@
             localStorage.setItem(STORE_PRODUCTS, JSON.stringify(products));
         }
 
-        function seedProducts() {
-            let p = loadProducts();
-            if (p.length) return p;
-            p = [
-                { name: 'Riz parfume 5kg', ref: 'REF-001', cat: 'Alimentation', unit: 'sachet', min: 10, buy: 4200, sell: 5200, qty: 0 },
-                { name: 'Huile vegetale 1L', ref: 'REF-002', cat: 'Alimentation', unit: 'litre', min: 10, buy: 1400, sell: 1800, qty: 24 },
-                { name: 'Savon liquide 500ml', ref: 'REF-003', cat: 'Hygiène', unit: 'unite', min: 8, buy: 900, sell: 1300, qty: 5 },
-                { name: 'Sucre en poudre 1kg', ref: 'REF-004', cat: 'Alimentation', unit: 'sachet', min: 20, buy: 950, sell: 1250, qty: 45 },
-                { name: 'Cahier 100 pages', ref: 'REF-005', cat: 'Fournitures', unit: 'unite', min: 15, buy: 350, sell: 550, qty: 3 },
-                { name: 'Lait en poudre 400g', ref: 'REF-006', cat: 'Alimentation', unit: 'sachet', min: 5, buy: 1600, sell: 2100, qty: 12 },
-                { name: "Eau minerale 1,5L", ref: 'REF-007', cat: 'Boissons', unit: 'unite', min: 24, buy: 250, sell: 400, qty: 60 },
-                { name: 'Pates alimentaires 500g', ref: 'REF-008', cat: 'Alimentation', unit: 'sachet', min: 12, buy: 350, sell: 550, qty: 0 },
-                { name: 'Stylo bleu', ref: 'REF-009', cat: 'Fournitures', unit: 'unite', min: 30, buy: 100, sell: 200, qty: 80 },
-                { name: 'Detergent 1L', ref: 'REF-010', cat: 'Hygiène', unit: 'litre', min: 10, buy: 1100, sell: 1500, qty: 6 }
-            ];
-            products = p.map((x, i) => ({ id: uid(), ...x, createdAt: Date.now() - (p.length - i) }));
-            saveProducts();
-            return products;
+        async function loadProductsFromApi() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/products.php`);
+                products = Array.isArray(payload.data) ? payload.data.map(normalizeProduct) : [];
+                saveProducts();
+                return products;
+            } catch (e) {
+                products = loadProducts();
+                if (!products.length) {
+                    const p = [
+                        { name: 'Riz parfume 5kg', ref: 'REF-001', cat: 'Alimentation', unit: 'sachet', min: 10, buy: 4200, sell: 5200, qty: 0 },
+                        { name: 'Huile vegetale 1L', ref: 'REF-002', cat: 'Alimentation', unit: 'litre', min: 10, buy: 1400, sell: 1800, qty: 24 },
+                        { name: 'Savon liquide 500ml', ref: 'REF-003', cat: 'Hygiène', unit: 'unite', min: 8, buy: 900, sell: 1300, qty: 5 },
+                        { name: 'Sucre en poudre 1kg', ref: 'REF-004', cat: 'Alimentation', unit: 'sachet', min: 20, buy: 950, sell: 1250, qty: 45 },
+                        { name: 'Cahier 100 pages', ref: 'REF-005', cat: 'Fournitures', unit: 'unite', min: 15, buy: 350, sell: 550, qty: 3 },
+                        { name: 'Lait en poudre 400g', ref: 'REF-006', cat: 'Alimentation', unit: 'sachet', min: 5, buy: 1600, sell: 2100, qty: 12 },
+                        { name: "Eau minerale 1,5L", ref: 'REF-007', cat: 'Boissons', unit: 'unite', min: 24, buy: 250, sell: 400, qty: 60 },
+                        { name: 'Pates alimentaires 500g', ref: 'REF-008', cat: 'Alimentation', unit: 'sachet', min: 12, buy: 350, sell: 550, qty: 0 },
+                        { name: 'Stylo bleu', ref: 'REF-009', cat: 'Fournitures', unit: 'unite', min: 30, buy: 100, sell: 200, qty: 80 },
+                        { name: 'Detergent 1L', ref: 'REF-010', cat: 'Hygiène', unit: 'litre', min: 10, buy: 1100, sell: 1500, qty: 6 }
+                    ];
+                    products = p.map((x, i) => ({ id: uid(), ...x, createdAt: Date.now() - (p.length - i) }));
+                    saveProducts();
+                }
+                return products;
+            }
         }
 
         let products = seedProducts();
@@ -1833,7 +1959,7 @@
             }
         });
 
-        document.getElementById('btnSaveProduct').addEventListener('click', () => {
+        document.getElementById('btnSaveProduct').addEventListener('click', async () => {
             const name = document.getElementById('pfName').value.trim();
             if (!name) { toast('Le nom du produit est obligatoire.', 'err'); return; }
             const data = {
@@ -1846,19 +1972,30 @@
                 sell: Number(document.getElementById('pfSell').value) || 0
             };
             const pfId = document.getElementById('pfId').value;
-            if (pfId) {
-                const p = products.find(x => x.id === pfId);
-                if (p) { Object.assign(p, data); toast('Produit "' + name + '" modifie avec succes.', 'ok'); }
-            } else {
-                const qty = Math.max(0, Number(document.getElementById('pfInitQty').value) || 0);
-                products.push({ id: uid(), ...data, qty, createdAt: Date.now() });
-                toast('Produit "' + name + '" ajoute au catalogue.', 'ok');
+            try {
+                if (pfId) {
+                    const payload = await apiFetch(`${API_BASE}/products.php?id=${encodeURIComponent(pfId)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    toast(payload.message || 'Produit modifie avec succes.', 'ok');
+                } else {
+                    const qty = Math.max(0, Number(document.getElementById('pfInitQty').value) || 0);
+                    const payload = await apiFetch(`${API_BASE}/products.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...data, qty })
+                    });
+                    toast(payload.message || 'Produit ajoute au catalogue.', 'ok');
+                }
+                await loadProductsFromApi();
+                await fetchActivity();
+                renderProducts(); renderStats(); renderActivity();
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+            } catch (e) {
+                toast(e.message || 'Erreur produit.', 'err');
             }
-            saveProducts();
-            renderProducts(); renderStats();
-            logActivity(currentAdminName(), pfId ? 'Modification produit' : 'Creation produit', 'Produit ' + name);
-            renderActivity();
-            bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
         });
 
         /* ============================================================
@@ -1873,18 +2010,30 @@
             localStorage.setItem(STORE_CATEGORIES, JSON.stringify(categories));
         }
 
+        async function loadCategoriesFromApi() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/categories.php`);
+                categories = Array.isArray(payload.data) ? payload.data.map(normalizeCategory) : [];
+                saveCategories();
+                return categories;
+            } catch (e) {
+                categories = loadCategories();
+                if (!categories.length) {
+                    const now = Date.now();
+                    categories = [
+                        { id: uid(), name: 'Alimentation', desc: 'Produits alimentaires et denrees', count: 4, createdAt: now - 4 },
+                        { id: uid(), name: 'Hygiène', desc: "Produits d entretien et d'hygiene", count: 2, createdAt: now - 3 },
+                        { id: uid(), name: 'Fournitures', desc: 'Fournitures de bureau et scolaires', count: 2, createdAt: now - 2 },
+                        { id: uid(), name: 'Boissons', desc: 'Boissons et eaux', count: 1, createdAt: now - 1 }
+                    ];
+                    saveCategories();
+                }
+                return categories;
+            }
+        }
+
         function seedCategories() {
-            let c = loadCategories();
-            if (c.length) return c;
-            const now = Date.now();
-            c = [
-                { id: uid(), name: 'Alimentation', desc: 'Produits alimentaires et denrees', count: 4, createdAt: now - 4 },
-                { id: uid(), name: 'Hygiène', desc: "Produits d entretien et d'hygiene", count: 2, createdAt: now - 3 },
-                { id: uid(), name: 'Fournitures', desc: 'Fournitures de bureau et scolaires', count: 2, createdAt: now - 2 },
-                { id: uid(), name: 'Boissons', desc: 'Boissons et eaux', count: 1, createdAt: now - 1 }
-            ];
-            localStorage.setItem(STORE_CATEGORIES, JSON.stringify(c));
-            return c;
+            return loadCategories();
         }
 
         let categories = seedCategories();
@@ -1938,51 +2087,99 @@
             }
         });
 
-        document.getElementById('btnSaveCategory').addEventListener('click', () => {
+        document.getElementById('btnSaveCategory').addEventListener('click', async () => {
             const name = document.getElementById('cfName').value.trim();
             if (!name) { toast('Veuillez saisir le nom de la categorie.', 'err'); return; }
             const desc = document.getElementById('cfDesc').value.trim();
-            if (editingCatId) {
-                const c = categories.find(x => x.id === editingCatId);
-                c.name = name; c.desc = desc;
-                toast('Categorie modifiee avec succes.', 'ok');
-            } else {
-                categories.push({ id: uid(), name, desc, count: 0, createdAt: Date.now() });
-                toast('Categorie creee avec succes.', 'ok');
+            try {
+                if (editingCatId) {
+                    const payload = await apiFetch(`${API_BASE}/categories.php?id=${encodeURIComponent(editingCatId)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, description: desc })
+                    });
+                    toast(payload.message || 'Categorie modifiee.', 'ok');
+                } else {
+                    const payload = await apiFetch(`${API_BASE}/categories.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, description: desc })
+                    });
+                    toast(payload.message || 'Categorie creee.', 'ok');
+                }
+                await loadCategoriesFromApi();
+                renderCategories();
+                bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
+            } catch (e) {
+                toast(e.message || 'Erreur categorie.', 'err');
             }
-            saveCategories();
-            renderCategories();
-            bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
         });
 
         /* ============================================================
            SUPPRESSION (utilisateurs, produits, categories)
            ============================================================ */
-        document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+        document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
             if (!deleteContext) return;
-            if (deleteContext.type === 'user') {
-                users = users.filter(u => u.id !== deleteContext.id);
-                saveUsers(users);
-                logActivity(currentAdminName(), 'Suppression utilisateur', 'Compte de ' + deleteContext.name);
-                renderUsers();
-            } else if (deleteContext.type === 'product') {
-                products = products.filter(p => p.id !== deleteContext.id);
-                saveProducts();
-                logActivity(currentAdminName(), 'Suppression produit', 'Produit ' + deleteContext.name);
-                renderProducts(); renderStats();
-            } else if (deleteContext.type === 'category') {
-                categories = categories.filter(c => c.id !== deleteContext.id);
-                saveCategories();
-                renderCategories();
+            try {
+                if (deleteContext.type === 'user') {
+                    const payload = await apiFetch(`${API_BASE}/users.php?id=${encodeURIComponent(deleteContext.id)}`, { method: 'DELETE' });
+                    toast(payload.message || 'Suppression effectuee.', 'ok');
+                    await loadUsersFromApi();
+                    renderUsers();
+                } else if (deleteContext.type === 'product') {
+                    const payload = await apiFetch(`${API_BASE}/products.php?id=${encodeURIComponent(deleteContext.id)}`, { method: 'DELETE' });
+                    toast(payload.message || 'Suppression effectuee.', 'ok');
+                    await loadProductsFromApi();
+                    renderProducts(); renderStats();
+                } else if (deleteContext.type === 'category') {
+                    const payload = await apiFetch(`${API_BASE}/categories.php?id=${encodeURIComponent(deleteContext.id)}`, { method: 'DELETE' });
+                    toast(payload.message || 'Suppression effectuee.', 'ok');
+                    await loadCategoriesFromApi();
+                    renderCategories();
+                }
+                await fetchActivity();
+                renderActivity();
+            } catch (e) {
+                toast(e.message || 'Erreur lors de la suppression.', 'err');
             }
-            renderActivity();
             bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-            toast('Suppression effectuee.', 'ok');
         });
 
         /* ============================================================
            STATISTIQUES
            ============================================================ */
+        let statsData = { cards: { products: 0, stockValue: 0, lowStock: 0, invoiceable: 0 }, categories: [], months: [], activity: [] };
+
+        async function fetchStats() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/stats.php`);
+                statsData = payload.data || statsData;
+                const cards = statsData.cards || {};
+                document.getElementById('stProducts').textContent = cards.products || products.length;
+                document.getElementById('stQty').textContent = products.reduce((s, p) => s + Number(p.qty || 0), 0);
+                document.getElementById('stValue').textContent = fmtMoney(cards.stockValue || 0);
+                document.getElementById('stAlert').textContent = cards.lowStock || 0;
+
+                const months = Array.isArray(statsData.months) && statsData.months.length ? statsData.months.map((m, idx) => {
+                    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+                    const label = monthNames[new Date(m.month + '-01').getMonth()] || `M${idx + 1}`;
+                    const val = Number(m.total || 0);
+                    return { m: label, v: val ? Math.min(100, Math.round((val / Math.max(...statsData.months.map(x => Number(x.total || 0)), 1)) * 100)) : 0 };
+                }) : [
+                    { m: 'Mars', v: 58 }, { m: 'Avril', v: 66 }, { m: 'Mai', v: 72 },
+                    { m: 'Juin', v: 64 }, { m: 'Juillet', v: 80 }, { m: 'Aout', v: 88 }
+                ];
+                document.getElementById('monthlyStats').innerHTML = months.map(x => `
+                    <div class="stat-row">
+                        <span class="sr-label">${x.m}</span>
+                        <span class="sr-val">${x.v} %</span>
+                    </div>
+                    <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${x.v}%;"></div></div>`).join('');
+            } catch (e) {
+                renderStats();
+            }
+        }
+
         function renderStats() {
             document.getElementById('stProducts').textContent = products.length;
             document.getElementById('stQty').textContent = products.reduce((s, p) => s + Number(p.qty || 0), 0);
@@ -2020,6 +2217,18 @@
             localStorage.setItem(STORE_PROFILE, JSON.stringify(profile));
         }
 
+        async function fetchProfile() {
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php`);
+                profile = payload.data || { ...DEFAULT_PROFILE };
+                profile.password = DEFAULT_PWD;
+                saveProfile();
+                renderSettings();
+            } catch (e) {
+                loadProfile();
+            }
+        }
+
         function renderSettings() {
             document.getElementById('setName').value = profile.name;
             document.getElementById('setEmail').value = profile.email;
@@ -2028,43 +2237,88 @@
             document.getElementById('chipUserRole').textContent = profile.role === 'Administrateur' ? "Responsable de l'entreprise" : profile.role;
         }
 
-        document.getElementById('btnSaveProfile').addEventListener('click', () => {
+        document.getElementById('btnSaveProfile').addEventListener('click', async () => {
             const name = document.getElementById('setName').value.trim();
             const email = document.getElementById('setEmail').value.trim();
             if (!name) { toast('Le nom complet est obligatoire.', 'err'); return; }
             if (!email) { toast("L'email est obligatoire.", 'err'); return; }
-            profile.name = name;
-            profile.email = email;
-            saveProfile();
-            renderSettings();
-            toast('Profil mis a jour avec succes.', 'ok');
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email })
+                });
+                await fetchProfile();
+                toast(payload.message || 'Profil mis a jour avec succes.', 'ok');
+            } catch (e) {
+                profile.name = name;
+                profile.email = email;
+                saveProfile();
+                renderSettings();
+                toast(e.message || 'Erreur profil.', 'err');
+            }
         });
 
-        document.getElementById('btnChangePwd').addEventListener('click', () => {
+        document.getElementById('btnChangePwd').addEventListener('click', async () => {
             const cur = document.getElementById('setCurrentPwd').value;
             const np = document.getElementById('setNewPwd').value;
             const cp = document.getElementById('setConfirmPwd').value;
             if (!cur) { toast('Saisissez votre mot de passe actuel.', 'err'); return; }
-            if (cur !== profile.password) { toast('Le mot de passe actuel est incorrect.', 'err'); return; }
             if (!np || np.length < 4) { toast('Le nouveau mot de passe doit contenir au moins 4 caracteres.', 'err'); return; }
             if (np !== cp) { toast('Les deux nouveaux mots de passe ne correspondent pas.', 'err'); return; }
-            if (np === profile.password) { toast('Le nouveau mot de passe est identique a l actuel.', 'err'); return; }
-            profile.password = np;
-            saveProfile();
-            document.getElementById('setCurrentPwd').value = '';
-            document.getElementById('setNewPwd').value = '';
-            document.getElementById('setConfirmPwd').value = '';
-            toast('Mot de passe mis a jour avec succes.', 'ok');
+            try {
+                const payload = await apiFetch(`${API_BASE}/profile.php?action=pwd`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password: cur, new_password: np })
+                });
+                document.getElementById('setCurrentPwd').value = '';
+                document.getElementById('setNewPwd').value = '';
+                document.getElementById('setConfirmPwd').value = '';
+                toast(payload.message || 'Mot de passe mis a jour avec succes.', 'ok');
+            } catch (e) {
+                toast(e.message || 'Erreur de mot de passe.', 'err');
+            }
         });
 
         /* ---------- Init ---------- */
-        loadProfile();
-        renderUsers();
-        renderProducts();
-        renderCategories();
-        renderStats();
-        renderActivity();
-        renderSettings();
+        async function initAdmin() {
+            // Vérifier la session utilisateur avant d'appeler les APIs pour éviter les erreurs 401 côté client.
+            const me = await getCurrentUser();
+            if (!me) {
+                // Afficher une bannière informative et charger les données en mode demo/localStorage.
+                const banner = document.createElement('div');
+                banner.style = 'background:#fff4ce;border:1px solid #ffe58f;padding:12px;border-radius:8px;margin-bottom:15px;color:#8a6d00;font-weight:600;text-align:center;';
+                banner.innerHTML = 'Session non authentifiee. <a href="Connexion.html" style="color:#8a4b00;font-weight:700;text-decoration:underline;">Connectez-vous</a> pour acceder aux donnees reelles.';
+                const head = document.querySelector('.dash-head');
+                if (head) head.parentNode.insertBefore(banner, head.nextSibling);
+                // charger local fallback
+                loadProfile();
+                users = seedUsers();
+                products = seedProducts();
+                categories = seedCategories();
+                // seeded activity already present
+            } else {
+                try {
+                    await fetchProfile();
+                    await loadUsersFromApi();
+                    await loadProductsFromApi();
+                    await loadCategoriesFromApi();
+                    await fetchStats();
+                    await fetchActivity();
+                } catch (e) {
+                    loadProfile();
+                }
+            }
+            renderUsers();
+            renderProducts();
+            renderCategories();
+            renderStats();
+            renderActivity();
+            renderSettings();
+        }
+
+        initAdmin();
     </script>
 
 </body>
